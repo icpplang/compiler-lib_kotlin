@@ -33,6 +33,7 @@ internal class FailedAssertionOnlyFirstCallbackTest {
         }
 
         private val scopeAsserter = ScopeAsserter(
+            FailedAssertionOnlyFirstCallbackTest::class,
             Proxy.newProxyInstance(
                 FailedAssertionCallback::class.java.classLoader,
                 arrayOf(FailedAssertionCallback::class.java),

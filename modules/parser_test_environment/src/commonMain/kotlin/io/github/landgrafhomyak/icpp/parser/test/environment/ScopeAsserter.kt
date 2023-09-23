@@ -4,6 +4,7 @@ import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
 
 internal class ScopeAsserter(
+    val key: KClass<*>,
     private val callbacks: FailedAssertionCallback,
     private val expectedEntities: EntityList,
     private val actualEntities: MutableEntityList = EntityArrayList()
@@ -74,7 +75,7 @@ internal class ScopeAsserter(
             }
         }
 
-        return ScopeAsserter(this.callbacks, expectedEntities, actualEntities)
+        return ScopeAsserter(actualKey, this.callbacks, expectedEntities, actualEntities)
     }
 }
 
