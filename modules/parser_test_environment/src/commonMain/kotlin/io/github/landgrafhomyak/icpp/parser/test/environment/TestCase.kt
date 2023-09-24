@@ -3,15 +3,17 @@ package io.github.landgrafhomyak.icpp.parser.test.environment
 import io.github.landgrafhomyak.icpp.parser.environment.SourceStream
 
 class TestCase<RootBuilder : Any> internal constructor(
-    private val rootMockFactory: () -> RootBuilder,
+    private val rootMock: RootBuilder,
     private val source: CharArray
 ) {
-    fun run(launcher: suspend (stream: SourceStream<CollectedSubstringTestImpl, PosTestImpl>, builder: RootBuilder) -> Unit): TestCase<RootBuilder> {
-        runParserCoro {
-            launcher(SourceStreamTestImpl(this@TestCase.source), this@TestCase.rootMockFactory())
-        }
-        return this
-    }
+    private var isInvoked = false
 
-    fun void() {}
+    fun run(launcher: suspend (stream: SourceStream<CollectedSubstringTestImpl, PosTestImpl>, builder: RootBuilder) -> Unit) {
+        if (this.isInvoked) throw IllegalStateException("This test already launched before")
+        this.isInvoked = true
+
+        runParserCoro {
+            launcher(SourceStreamTestImpl(this@TestCase.source), this.rootMock)
+        }
+    }
 }
