@@ -7,21 +7,55 @@ import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
 import kotlin.reflect.full.instanceParameter
 
+@Suppress("ClassName")
+@Target(AnnotationTarget.FUNCTION)
+@Retention(AnnotationRetention.RUNTIME)
+internal annotation class FailedAssertionCallback_NeedTest
+
 internal interface FailedAssertionCallback {
+    @FailedAssertionCallback_NeedTest
     fun onPositionInsteadOfChild(scope: ScopeAsserter, expectedChildKey: KClass<*>, actualPosKey: KFunction<*>, actualPos: Int)
+
+    @FailedAssertionCallback_NeedTest
     fun onPositionInsteadOfRange(scope: ScopeAsserter, expectedRangeKey: KFunction<*>, expectedStart: Int, expectedEnd: Int, actualPosKey: KFunction<*>, actualPos: Int)
+
+    @FailedAssertionCallback_NeedTest
     fun onInvalidPosKey(scope: ScopeAsserter, pos: Int, expectedKey: KFunction<*>, actualKey: KFunction<*>)
+
+    @FailedAssertionCallback_NeedTest
     fun onInvalidPosValue(scope: ScopeAsserter, key: KFunction<*>, expectedPos: Int, actualPos: Int)
+
+    @FailedAssertionCallback_NeedTest
     fun onUnexpectedPos(scope: ScopeAsserter, key: KFunction<*>, pos: Int)
+
+    @FailedAssertionCallback_NeedTest
     fun onRangeInsteadOfPos(scope: ScopeAsserter, expectedPosKey: KFunction<*>, expectedPos: Int, actualRangeKey: KFunction<*>, actualStart: Int, actualEnd: Int)
+
+    @FailedAssertionCallback_NeedTest
     fun onRangeInsteadOfChild(scope: ScopeAsserter, expectedChildKey: KClass<*>, actualRangeKey: KFunction<*>, actualStart: Int, actualEnd: Int)
+
+    @FailedAssertionCallback_NeedTest
     fun onInvalidRangeKey(scope: ScopeAsserter, start: Int, end: Int, expectedKey: KFunction<*>, actualKey: KFunction<*>)
+
+    @FailedAssertionCallback_NeedTest
     fun onInvalidRangeStart(scope: ScopeAsserter, key: KFunction<*>, end: Int, expectedStart: Int, actualStart: Int)
+
+    @FailedAssertionCallback_NeedTest
     fun onInvalidRangeEnd(scope: ScopeAsserter, key: KFunction<*>, start: Int, expectedEnd: Int, actualEnd: Int)
+
+    @FailedAssertionCallback_NeedTest
     fun onUnexpectedRange(scope: ScopeAsserter, actualRangeKey: KFunction<*>, actualStart: Int, actualEnd: Int)
+
+    @FailedAssertionCallback_NeedTest
     fun onChildInsteadOfPos(scope: ScopeAsserter, expectedPosKey: KFunction<*>, expectedPos: Int, actualChildKey: KClass<*>)
+
+    @FailedAssertionCallback_NeedTest
     fun onChildInsteadOfRange(scope: ScopeAsserter, expectedRangeKey: KFunction<*>, expectedStart: Int, expectedEnd: Int, actualChildKey: KClass<*>)
+
+    @FailedAssertionCallback_NeedTest
     fun onInvalidChildKey(scope: ScopeAsserter, expectedKey: KClass<*>, actualKey: KClass<*>)
+
+    @FailedAssertionCallback_NeedTest
     fun onUnexpectedChild(scope: ScopeAsserter, actualKey: KClass<*>)
 }
 
@@ -121,7 +155,7 @@ internal class ThrowOnFailedAssertionCallback(private val source: CharArray) : F
         this.source.split('\n', lineStart, lineEnd) { s, e ->
             out.append("|> ")
             out.appendRange(this.source, s, s + e)
-            out.append("|  ")
+            out.append("\n|  ")
             val ss: Int
             if (s < start) {
                 ss = start
@@ -135,6 +169,7 @@ internal class ThrowOnFailedAssertionCallback(private val source: CharArray) : F
             } else {
                 out.append("^".repeat(e - ss))
             }
+            out.append('\n')
         }
         // out.append('\n')
         return out.toString()
@@ -143,6 +178,7 @@ internal class ThrowOnFailedAssertionCallback(private val source: CharArray) : F
     private val KClass<*>.key: String
         get() = this
             .qualifiedName!!
+            .let { k -> "`${k}`" }
 
     private val KFunction<*>.key: String
         get() = this
@@ -152,8 +188,9 @@ internal class ThrowOnFailedAssertionCallback(private val source: CharArray) : F
             .let { c -> c as KClass<*> }
             .qualifiedName!!
             .let { c -> "${c}#${this.name}" }
+            .let { k -> "`${k}`" }
 
-    private inline fun format(scope: ScopeAsserter, builder: () -> String): Nothing = throw AssertionError("[scope ${scope.key.key}]\n" + builder())
+    private inline fun format(scope: ScopeAsserter, builder: () -> String): Nothing = throw AssertionError("\n[scope ${scope.key.key}]\n" + builder())
 
     override fun onPositionInsteadOfChild(scope: ScopeAsserter, expectedChildKey: KClass<*>, actualPosKey: KFunction<*>, actualPos: Int) = this.format(scope) {
         "Expected child scope with key ${expectedChildKey.key}, got position with key ${actualPosKey.key}:\n${
@@ -268,6 +305,7 @@ internal class ScheduledThrowOnFailedAssertionCallback(private val wrapped: Fail
             this.err = a
         }
     }
+
     override fun onPositionInsteadOfChild(scope: ScopeAsserter, expectedChildKey: KClass<*>, actualPosKey: KFunction<*>, actualPos: Int) = this.capture {
         this.wrapped.onPositionInsteadOfChild(scope, expectedChildKey, actualPosKey, actualPos)
     }
