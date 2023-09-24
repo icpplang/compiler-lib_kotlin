@@ -3,20 +3,27 @@ package io.github.landgrafhomyak.icpp.parser.test.environment
 import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
 
-internal class ScopeAsserter(
-    val key: KClass<*>,
+internal interface ScopeAsserter {
+    val key: KClass<*>
+    fun addPos(actualKey: KFunction<*>, pos: PosTestImpl)
+    fun addRange(actualKey: KFunction<*>, start: PosTestImpl, end: PosTestImpl)
+    fun getChildAsserter(actualKey: KClass<*>): ScopeAsserter
+}
+
+internal class ScopeAsserterImpl(
+    override val key: KClass<*>,
     private val callbacks: FailedAssertionCallback,
     private val expectedEntities: EntityList,
     private val actualEntities: MutableEntityList = EntityArrayList()
-) {
-    private val expectedFlow = this.expectedEntities.flatIterator()
+) : ScopeAsserter {
+    private val expectedFlow = this.expectedEntities.iterator()
 
     private fun nextExpectedEntityOrNull(): EntityList.Entity? =
         if (this.expectedFlow.hasNext()) this.expectedFlow.next()
         else null
 
 
-    fun addPos(actualKey: KFunction<*>, pos: PosTestImpl) {
+    override fun addPos(actualKey: KFunction<*>, pos: PosTestImpl) {
         this.actualEntities.add(actualKey, pos)
         when (val e = this.nextExpectedEntityOrNull()) {
             is EntityList.PosEntity -> {
@@ -30,7 +37,7 @@ internal class ScopeAsserter(
         }
     }
 
-    fun addRange(actualKey: KFunction<*>, start: PosTestImpl, end: PosTestImpl) {
+    override fun addRange(actualKey: KFunction<*>, start: PosTestImpl, end: PosTestImpl) {
         this.actualEntities.add(actualKey, start, end)
         when (val e = this.nextExpectedEntityOrNull()) {
             is EntityList.PosEntity -> this.callbacks.onRangeInsteadOfPos(this, e.key, e.pos, actualKey, start.value, end.value)
@@ -45,7 +52,7 @@ internal class ScopeAsserter(
         }
     }
 
-    fun getChildAsserter(actualKey: KClass<*>): ScopeAsserter {
+    override fun getChildAsserter(actualKey: KClass<*>): ScopeAsserter {
         val childEntities = EntityArrayList()
         this.actualEntities.add(actualKey, childEntities)
         val expectedEntities: EntityList
@@ -75,7 +82,7 @@ internal class ScopeAsserter(
             }
         }
 
-        return ScopeAsserter(actualKey, this.callbacks, expectedEntities, actualEntities)
+        return ScopeAsserterImpl(actualKey, this.callbacks, expectedEntities)
     }
 }
 

@@ -6,16 +6,16 @@ import io.github.landgrafhomyak.icpp.parser.test.environment.PosTestImpl
 import io.github.landgrafhomyak.icpp.parser.test.environment.ScopeAsserter
 
 
-internal class AttributesListTestAsserter(private val asserter: ScopeAsserter) : AttributesListBuilder<CollectedSubstringTestImpl, PosTestImpl> {
+internal class AttributesListAsserter(private val asserter: ScopeAsserter) : AttributesListBuilder<CollectedSubstringTestImpl, PosTestImpl> {
     override fun unclosed(pos: PosTestImpl) {
-        this.asserter.addPos(AttributesListTestAsserter::unclosed, pos)
+        this.asserter.addPos(AttributesListBuilder<*, *>::unclosed, pos)
     }
 
     override fun unsupportedSymbols(start: PosTestImpl, end: PosTestImpl) {
-        this.asserter.addRange(AttributesListTestAsserter::unsupportedSymbols, start, end)
+        this.asserter.addRange(AttributesListBuilder<*, *>::unsupportedSymbols, start, end)
     }
 
     override fun comma(pos: PosTestImpl) {
-        this.asserter.addPos(AttributesListTestAsserter::comma, pos)
+        this.asserter.addPos(AttributesListBuilder<*, *>::comma, pos)
     }
 }

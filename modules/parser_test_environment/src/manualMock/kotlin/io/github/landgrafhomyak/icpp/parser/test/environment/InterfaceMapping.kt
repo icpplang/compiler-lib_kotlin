@@ -1,11 +1,12 @@
 package io.github.landgrafhomyak.icpp.parser.test.environment
 
 import io.github.landgrafhomyak.icpp.ast.builders.AttributesListBuilder
-import io.github.landgrafhomyak.icpp.parser.test.environment.mockimpl.AttributesListTestAsserter
+import io.github.landgrafhomyak.icpp.parser.test.environment.mockimpl.AttributesListAsserter
 import kotlin.reflect.KClass
+import kotlin.reflect.KFunction1
 
-
-private typealias ConstructorSignature<I> = (ScopeAsserter) -> I
+@Suppress("REDUNDANT_PROJECTION")
+private typealias ConstructorSignature<I> = KFunction1<ScopeAsserter, out I>
 
 internal object InterfaceMapping {
     private operator fun get(i: KClass<*>): ConstructorSignature<Any> =
@@ -21,20 +22,20 @@ internal object InterfaceMapping {
         this[i](scopeAsserter) as I
 
     private val map = Builder.build {
-        add<AttributesListBuilder<*, *>>(::AttributesListTestAsserter)
+        add<AttributesListBuilder<*, *>>(::AttributesListAsserter)
     }
 
 
     private object Builder {
         abstract class Abc {
-            inline fun <reified I : Any> add(noinline constructor: ConstructorSignature<I>) = this.add(I::class, constructor)
+            inline fun <reified I : Any> add(constructor: ConstructorSignature<I>) = this.add(I::class, constructor)
 
             abstract fun <I : Any> add(i: KClass<I>, constructor: ConstructorSignature<I>)
         }
 
         private class Impl(private val map: MutableMap<KClass<*>, ConstructorSignature<Any>>) : Abc() {
             override fun <I : Any> add(i: KClass<I>, constructor: ConstructorSignature<I>) {
-                if (!i::class.java.isInterface)
+                if (!i.java.isInterface)
                     throw IllegalArgumentException()
 
                 if (i in this.map)
@@ -52,4 +53,9 @@ internal object InterfaceMapping {
             return map
         }
     }
+
+    fun mocksIterator(): Iterator<Pair<KClass<*>, ConstructorSignature<Any>>> = this.map
+        .entries
+        .map { (i, c) -> i to c }
+        .iterator()
 }

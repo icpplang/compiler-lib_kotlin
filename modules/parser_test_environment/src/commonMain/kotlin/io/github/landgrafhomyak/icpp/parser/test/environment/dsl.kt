@@ -16,7 +16,7 @@ fun <RootBuilder : Any> buildParserTest(
 
     val source = sourceBuilder.toString().toCharArray()
     val callbacks = ScheduledThrowOnFailedAssertionCallback(ThrowOnFailedAssertionCallback(source))
-    val asserter = ScopeAsserter(rootBuilder, FailedAssertionOnlyFirstCallback(callbacks), expectedEntities)
+    val asserter = ScopeAsserterImpl(rootBuilder, FailedAssertionOnlyFirstCallback(callbacks), expectedEntities)
     return TestCase(mock(rootBuilder, asserter), source)
 }
 

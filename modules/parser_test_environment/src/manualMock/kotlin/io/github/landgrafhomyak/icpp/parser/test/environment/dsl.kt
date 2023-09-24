@@ -1,4 +1,4 @@
-@file:JvmName("DslMannualMockKt")
+@file:JvmName("DslManualMockKt")
 
 package io.github.landgrafhomyak.icpp.parser.test.environment
 

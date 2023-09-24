@@ -39,23 +39,25 @@ private object Mocks {
         override fun flatIterator(): Iterator<EntityList.Entity> = this.raise()
     }
 
-    private val scopeAsserter = ScopeAsserter(
-        FailedAssertionOnlyFirstCallbackTest::class,
-        Proxy.newProxyInstance(
-            FailedAssertionCallback::class.java.classLoader,
-            arrayOf(FailedAssertionCallback::class.java),
-            FailedAssertionCallbackScopeSentinel
-        ) as FailedAssertionCallback,
-        EmptyEntityList,
-        NoAccessEntityList
-    )
+    private object ScopeAsserterImpl : ScopeAsserter {
+        override val key: KClass<*> = ScopeAsserterImpl::class
+
+        override fun addPos(actualKey: KFunction<*>, pos: PosTestImpl) {}
+
+        override fun addRange(actualKey: KFunction<*>, start: PosTestImpl, end: PosTestImpl) {}
+
+        override fun getChildAsserter(actualKey: KClass<*>): ScopeAsserter {
+            return this
+        }
+
+    }
 
     @JvmStatic
     fun callFunction(fn: KFunction<*>, self: FailedAssertionCallback) {
         val args = fn.parameters.map { pt ->
             when (pt.type.classifier) {
                 FailedAssertionCallback::class -> self
-                ScopeAsserter::class -> this.scopeAsserter
+                ScopeAsserter::class -> ScopeAsserterImpl
                 KClass::class -> FailedAssertionOnlyFirstCallbackTest::class
                 KFunction::class -> Any::toString
                 Int::class -> 0
@@ -72,11 +74,12 @@ private object Mocks {
 }
 
 @Suppress("TestFunctionName")
-private fun FAC_createProxy(meta: InvocationHandler): FailedAssertionCallback = Proxy.newProxyInstance(
-    FailedAssertionCallback::class.java.classLoader,
-    arrayOf(FailedAssertionCallback::class.java),
-    meta
-) as FailedAssertionCallback
+private fun FAC_createProxy(meta: InvocationHandler): FailedAssertionCallback =
+    Proxy.newProxyInstance(
+        FailedAssertionCallback::class.java.classLoader,
+        arrayOf(FailedAssertionCallback::class.java),
+        meta
+    ) as FailedAssertionCallback
 
 
 private class FailedAssertionCallbackProxy(val expectedMethod: Method) : InvocationHandler {
