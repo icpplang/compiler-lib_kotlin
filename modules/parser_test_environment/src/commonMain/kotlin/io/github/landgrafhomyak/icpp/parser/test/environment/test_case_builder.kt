@@ -7,14 +7,15 @@ import kotlin.reflect.KFunction3
 
 abstract class TestCaseBuilder<T : Any> {
     abstract operator fun String.unaryPlus()
-    abstract fun range(expectedCallback: KFunction3<T, PosTestImpl, PosTestImpl, Unit>, inner: TestCaseBuilder<T>.() -> Unit)
-    abstract fun range(expectedCallback: KFunction3<T, PosTestImpl, PosTestImpl, Unit>, string: String)
-    abstract fun substr(expectedCallback: KFunction2<T, CollectedSubstringTestImpl, Unit>, inner: TestCaseBuilder<T>.() -> Unit)
-    abstract fun substr(expectedCallback: KFunction2<T, CollectedSubstringTestImpl, Unit>, string: String)
-    abstract fun symbol(vararg expectedCallbacks: KFunction2<T, PosTestImpl, Unit>, chr: Char)
+    abstract fun range(expectedCallback: KFunction3<T, *, *, Any?>, inner: TestCaseBuilder<T>.() -> Unit)
+    abstract fun range(expectedCallback: KFunction3<T, *, *, Any?>, string: String)
+    abstract fun substr(expectedCallback: KFunction2<T, *, Any?>, inner: TestCaseBuilder<T>.() -> Unit)
+    abstract fun substr(expectedCallback: KFunction2<T, *, Any?>, string: String)
+    abstract fun symbol(vararg expectedCallbacks: KFunction2<T, *, Any?>, chr: Char)
 
     @Deprecated("before/after?", replaceWith = ReplaceWith("symbol"))
-    abstract fun pos(vararg expectedCallbacks: KFunction2<Any, PosTestImpl, Unit>)
+    abstract fun pos(vararg expectedCallbacks: KFunction2<T, *, Any?>)
+
     abstract fun <S : Any> subObject(kClass: KClass<S>, inner: TestCaseBuilder<S>.() -> Unit)
     inline fun <reified S : Any> subObject(noinline inner: TestCaseBuilder<S>.() -> Unit) =
         this.subObject(S::class, inner)
@@ -44,7 +45,7 @@ internal class TestCaseBuilderImpl<T : Any>(
     }
 
     @Suppress("OVERRIDE_DEPRECATION")
-    override fun pos(vararg expectedCallbacks: KFunction2<Any, PosTestImpl, Unit>) {
+    override fun pos(vararg expectedCallbacks: KFunction2<T, *, Any?>) {
         TODO()
     }
 
@@ -58,7 +59,7 @@ internal class TestCaseBuilderImpl<T : Any>(
         }
     }
 
-    override fun symbol(vararg expectedCallbacks: KFunction2<T, PosTestImpl, Unit>, chr: Char) {
+    override fun symbol(vararg expectedCallbacks: KFunction2<T, *, Any?>, chr: Char) {
         this.assertNoChild()
         val pos = this.source.length
         for (k in expectedCallbacks)
@@ -72,12 +73,12 @@ internal class TestCaseBuilderImpl<T : Any>(
         this.entities.add(expectedCallback, pos1, this.source.length)
     }
 
-    override fun substr(expectedCallback: KFunction2<T, CollectedSubstringTestImpl, Unit>, string: String) {
+    override fun substr(expectedCallback: KFunction2<T, *, Any?>, string: String) {
         this.assertNoChild()
         this.addRange(expectedCallback, string)
     }
 
-    override fun range(expectedCallback: KFunction3<T, PosTestImpl, PosTestImpl, Unit>, string: String) {
+    override fun range(expectedCallback: KFunction3<T, *, *, Any?>, string: String) {
         this.assertNoChild()
         this.addRange(expectedCallback, string)
     }
@@ -89,7 +90,7 @@ internal class TestCaseBuilderImpl<T : Any>(
         this.entities.add(expectedCallback, pos1, this.source.length)
     }
 
-    override fun substr(expectedCallback: KFunction2<T, CollectedSubstringTestImpl, Unit>, inner: TestCaseBuilder<T>.() -> Unit) {
+    override fun substr(expectedCallback: KFunction2<T, *, Any?>, inner: TestCaseBuilder<T>.() -> Unit) {
         this.assertNoChild()
         this.childScope {
             this.addRange(expectedCallback, inner)
@@ -97,7 +98,7 @@ internal class TestCaseBuilderImpl<T : Any>(
     }
 
 
-    override fun range(expectedCallback: KFunction3<T, PosTestImpl, PosTestImpl, Unit>, inner: TestCaseBuilder<T>.() -> Unit) {
+    override fun range(expectedCallback: KFunction3<T, *, *, Any?>, inner: TestCaseBuilder<T>.() -> Unit) {
         this.assertNoChild()
         this.childScope {
             this.addRange(expectedCallback, inner)
