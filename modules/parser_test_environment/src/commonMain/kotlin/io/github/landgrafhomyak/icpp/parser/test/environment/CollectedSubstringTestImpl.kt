@@ -4,8 +4,8 @@ import io.github.landgrafhomyak.icpp.parser.environment.CollectedSubstring
 
 class CollectedSubstringTestImpl(
     private val source: CharArray,
-    private val startPos: Int,
-    private val endPos: Int
+    val startPos: Int,
+    val endPos: Int
 ) : CollectedSubstring {
     override fun compareKeyword(kw: String): Boolean {
         var sPos = this.startPos

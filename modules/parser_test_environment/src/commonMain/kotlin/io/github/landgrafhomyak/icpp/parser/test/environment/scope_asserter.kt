@@ -7,6 +7,7 @@ internal interface ScopeAsserter {
     val key: KClass<*>
     fun addPos(actualKey: KFunction<*>, pos: PosTestImpl)
     fun addRange(actualKey: KFunction<*>, start: PosTestImpl, end: PosTestImpl)
+    fun addSubstr(actualKey: KFunction<*>, cs: CollectedSubstringTestImpl)
     fun getChildAsserter(actualKey: KClass<*>): ScopeAsserter
 }
 
@@ -37,20 +38,26 @@ internal class ScopeAsserterImpl(
         }
     }
 
-    override fun addRange(actualKey: KFunction<*>, start: PosTestImpl, end: PosTestImpl) {
+    private fun addRangeImpl(actualKey: KFunction<*>, start: Int, end: Int) {
         this.actualEntities.add(actualKey, start, end)
         when (val e = this.nextExpectedEntityOrNull()) {
-            is EntityList.PosEntity -> this.callbacks.onRangeInsteadOfPos(this, e.key, e.pos, actualKey, start.value, end.value)
+            is EntityList.PosEntity -> this.callbacks.onRangeInsteadOfPos(this, e.key, e.pos, actualKey, start, end)
             is EntityList.RangeEntity -> {
-                if (e.key != actualKey) this.callbacks.onInvalidRangeKey(this, start.value, end.value, e.key, actualKey)
-                if (e.start != start.value) this.callbacks.onInvalidRangeStart(this, e.key, e.end, e.start, start.value)
-                if (e.end != end.value) this.callbacks.onInvalidRangeEnd(this, e.key, e.start, e.end, end.value)
+                if (e.key != actualKey) this.callbacks.onInvalidRangeKey(this, start, end, e.key, actualKey)
+                if (e.start != start) this.callbacks.onInvalidRangeStart(this, e.key, e.end, e.start, start)
+                if (e.end != end) this.callbacks.onInvalidRangeEnd(this, e.key, e.start, e.end, end)
             }
 
-            is EntityList.ChildEntity -> this.callbacks.onRangeInsteadOfChild(this, e.key, actualKey, start.value, end.value)
-            null -> this.callbacks.onUnexpectedRange(this, actualKey, start.value, end.value)
+            is EntityList.ChildEntity -> this.callbacks.onRangeInsteadOfChild(this, e.key, actualKey, start, end)
+            null -> this.callbacks.onUnexpectedRange(this, actualKey, start, end)
         }
     }
+
+    override fun addRange(actualKey: KFunction<*>, start: PosTestImpl, end: PosTestImpl) =
+        this.addRangeImpl(actualKey, start.value, end.value)
+
+    override fun addSubstr(actualKey: KFunction<*>, cs: CollectedSubstringTestImpl) =
+        this.addRangeImpl(actualKey, cs.startPos, cs.endPos)
 
     override fun getChildAsserter(actualKey: KClass<*>): ScopeAsserter {
         val childEntities = EntityArrayList()

@@ -19,6 +19,9 @@ abstract class TestCaseBuilder<T : Any> {
     abstract fun <S : Any> subObject(kClass: KClass<S>, inner: TestCaseBuilder<S>.() -> Unit)
     inline fun <reified S : Any> subObject(noinline inner: TestCaseBuilder<S>.() -> Unit) =
         this.subObject(S::class, inner)
+
+    abstract fun noise(s: String)
+    abstract fun noise(c: Char)
 }
 
 
@@ -57,6 +60,14 @@ internal class TestCaseBuilderImpl<T : Any>(
             val child = TestCaseBuilderImpl<S>(this.source, subEntities)
             inner(child)
         }
+    }
+
+    override fun noise(s: String) {
+        this.source.append(s)
+    }
+
+    override fun noise(c: Char) {
+        this.source.append(c)
     }
 
     override fun symbol(vararg expectedCallbacks: KFunction2<T, *, Any?>, chr: Char) {

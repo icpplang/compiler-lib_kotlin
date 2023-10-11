@@ -5,7 +5,8 @@ import kotlin.reflect.KClass
 
 class TestCase<RootBuilder : Any> internal constructor(
     private val rootMock: RootBuilder,
-    private val source: CharArray
+    private val source: CharArray,
+    private val onTestFinish: () -> Unit
 ) {
     private var isInvoked = false
 
@@ -23,6 +24,8 @@ class TestCase<RootBuilder : Any> internal constructor(
             @Suppress("UNCHECKED_CAST")
             launcher(SourceStreamTestImpl(this@TestCase.source), this.rootMock as RootBuilderImpl)
         }
+
+        this.onTestFinish.invoke()
     }
 
     inline fun <reified RootBuilderImpl : RootBuilder> run(

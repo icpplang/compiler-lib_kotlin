@@ -45,6 +45,7 @@ private object Mocks {
         override fun addPos(actualKey: KFunction<*>, pos: PosTestImpl) {}
 
         override fun addRange(actualKey: KFunction<*>, start: PosTestImpl, end: PosTestImpl) {}
+        override fun addSubstr(actualKey: KFunction<*>, cs: CollectedSubstringTestImpl) {}
 
         override fun getChildAsserter(actualKey: KClass<*>): ScopeAsserter {
             return this

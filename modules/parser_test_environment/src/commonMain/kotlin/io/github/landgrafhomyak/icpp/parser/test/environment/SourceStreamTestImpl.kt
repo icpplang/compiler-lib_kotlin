@@ -6,14 +6,14 @@ import io.github.landgrafhomyak.icpp.parser.environment.SourceStream
 class SourceStreamTestImpl(private val source: CharArray) : SourceStream<CollectedSubstringTestImpl, PosTestImpl> {
     override suspend fun collect(predicate: Predicate): CollectedSubstringTestImpl {
         val start = this._pos
-        while (predicate.check(this.source[this._pos++]))
+        while (this._pos < this.source.size && predicate.check(this.source[this._pos]))
             this._pos++
 
         return CollectedSubstringTestImpl(this.source, start, this._pos)
     }
 
     override suspend fun skip(predicate: Predicate) {
-        while (predicate.check(this.source[this._pos++]))
+        while (this._pos < this.source.size && predicate.check(this.source[this._pos]))
             this._pos++
     }
 
