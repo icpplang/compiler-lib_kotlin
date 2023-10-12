@@ -12,7 +12,7 @@ class TestCase<RootBuilder : Any> internal constructor(
 
     fun <RootBuilderImpl : RootBuilder> run(
         builderClass: KClass<RootBuilderImpl>,
-        launcher: suspend (stream: SourceStream<CollectedSubstringTestImpl, PosTestImpl>, builder: RootBuilderImpl) -> Unit
+        launcher: suspend (stream: SourceStream<CollectedSubstringTestImpl, PosTestImpl>, builder: RootBuilderImpl) -> Any
     ) {
         if (this.isInvoked) throw IllegalStateException("This test already launched before")
         this.isInvoked = true
@@ -20,7 +20,7 @@ class TestCase<RootBuilder : Any> internal constructor(
         if (!builderClass.isInstance(this.rootMock))
             throw IllegalArgumentException("You should provide to runner same interface as to builder")
 
-        runParserCoro {
+        runParserTestCoro {
             @Suppress("UNCHECKED_CAST")
             launcher(SourceStreamTestImpl(this@TestCase.source), this.rootMock as RootBuilderImpl)
         }
