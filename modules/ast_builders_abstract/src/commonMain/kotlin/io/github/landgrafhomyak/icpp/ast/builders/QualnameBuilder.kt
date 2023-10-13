@@ -19,5 +19,8 @@ interface QualnameBuilder<CS : CollectedSubstring, P : Pos> {
     fun spacesBetweenSeparatorAndName(start: P, end: P)
 
     @Error
-    fun unfinishedIdentifier(p: P)
+    fun nothingAfterSeparator(p: P)
+
+    @Error
+    fun addBadLevel(start: P, end: P)
 }

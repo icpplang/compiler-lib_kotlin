@@ -23,7 +23,11 @@ internal class QualnameAsserter(private val asserter: ScopeAsserter) : QualnameB
         this.asserter.addRange(QualnameBuilder<*, *>::spacesBetweenSeparatorAndName, start, end)
     }
 
-    override fun unfinishedIdentifier(p: PosTestImpl) {
+    override fun nothingAfterSeparator(p: PosTestImpl) {
         this.asserter.addPos(QualnameBuilder<*, *>::separator, p)
+    }
+
+    override fun addBadLevel(start: PosTestImpl, end: PosTestImpl) {
+        this.asserter.addRange(QualnameBuilder<*, *>::addBadLevel, start, end)
     }
 }

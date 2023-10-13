@@ -9,7 +9,7 @@ class IdentifierTest {
     private fun testIdentifierParser(identifier: String = "", noise: String = "", matchExpected: Boolean = true) {
         val source = (identifier + noise).toCharArray()
         val stream = SourceStreamTestImpl(source)
-        val result = runParserTestCoro { parseIdentifier(stream) }
+        val result = runParserTestCoro { IdentifierParsers.parseIdentifier(stream) }
         if (result != null) {
             if (!matchExpected)
                 throw AssertionError("Unexpected identifier match: ${formatTestSourceRange(source, result.startPos, result.endPos)}")
