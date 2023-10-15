@@ -13,15 +13,14 @@ abstract class TestCaseBuilder<T : Any> {
     abstract fun substr(expectedCallback: KFunction2<T, *, Any?>, string: String)
     abstract fun symbol(vararg expectedCallbacks: KFunction2<T, *, Any?>, chr: Char)
 
-    @Deprecated("before/after?", replaceWith = ReplaceWith("symbol"))
+    /**
+     * Position of next symbol
+     */
     abstract fun pos(vararg expectedCallbacks: KFunction2<T, *, Any?>)
 
     abstract fun <S : Any> subObject(kClass: KClass<S>, inner: TestCaseBuilder<S>.() -> Unit)
     inline fun <reified S : Any> subObject(noinline inner: TestCaseBuilder<S>.() -> Unit) =
         this.subObject(S::class, inner)
-
-    abstract fun noise(s: String)
-    abstract fun noise(c: Char)
 }
 
 
@@ -47,9 +46,11 @@ internal class TestCaseBuilderImpl<T : Any>(
         this@TestCaseBuilderImpl.source.append(this@unaryPlus)
     }
 
-    @Suppress("OVERRIDE_DEPRECATION")
     override fun pos(vararg expectedCallbacks: KFunction2<T, *, Any?>) {
-        TODO()
+        this.assertNoChild()
+        val pos = this.source.length
+        for (k in expectedCallbacks)
+            this.entities.add(k, pos)
     }
 
     override fun <S : Any> subObject(kClass: KClass<S>, inner: TestCaseBuilder<S>.() -> Unit) {
@@ -60,14 +61,6 @@ internal class TestCaseBuilderImpl<T : Any>(
             val child = TestCaseBuilderImpl<S>(this.source, subEntities)
             inner(child)
         }
-    }
-
-    override fun noise(s: String) {
-        this.source.append(s)
-    }
-
-    override fun noise(c: Char) {
-        this.source.append(c)
     }
 
     override fun symbol(vararg expectedCallbacks: KFunction2<T, *, Any?>, chr: Char) {

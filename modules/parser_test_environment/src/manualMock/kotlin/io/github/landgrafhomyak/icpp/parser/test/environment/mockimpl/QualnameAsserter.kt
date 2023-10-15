@@ -24,7 +24,7 @@ internal class QualnameAsserter(private val asserter: ScopeAsserter) : QualnameB
     }
 
     override fun nothingAfterSeparator(p: PosTestImpl) {
-        this.asserter.addPos(QualnameBuilder<*, *>::separator, p)
+        this.asserter.addPos(QualnameBuilder<*, *>::nothingAfterSeparator, p)
     }
 
     override fun addBadLevel(start: PosTestImpl, end: PosTestImpl) {

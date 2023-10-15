@@ -209,7 +209,7 @@ internal class ThrowOnFailedAssertionCallback(private val source: CharArray) : F
     }
 
     override fun onInvalidRangeStart(scope: ScopeAsserter, key: KFunction<*>, end: Int, expectedStart: Int, actualStart: Int) = this.format(scope) {
-        "Range with ${key.key} with invalid start\nExpected:\n${
+        "Range with key ${key.key} with invalid start\nExpected:\n${
             formatTestSourceRange(this.source, expectedStart, end)
         }\n\nActual:\n${
             formatTestSourceRange(this.source, actualStart, end)
@@ -217,7 +217,7 @@ internal class ThrowOnFailedAssertionCallback(private val source: CharArray) : F
     }
 
     override fun onInvalidRangeEnd(scope: ScopeAsserter, key: KFunction<*>, start: Int, expectedEnd: Int, actualEnd: Int) = this.format(scope) {
-        "Range with ${key.key} with invalid end\nExpected:\n${
+        "Range with key ${key.key} with invalid end\nExpected:\n${
             formatTestSourceRange(this.source, start, expectedEnd)
         }\n\nActual:\n${
             formatTestSourceRange(this.source, start, actualEnd)

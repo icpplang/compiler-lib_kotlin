@@ -86,9 +86,9 @@ object IdentifierParsers {
                 builder.unfinishedScopeResolutionOperator(scopeResolutionOperatorStart, stream.pos)
                 return
             }
+            stream.move()
             builder.separator(scopeResolutionOperatorStart, stream.pos)
-
-            if (stream.move()) {
+            if (stream.isEnded) {
                 builder.nothingAfterSeparator(stream.pos)
                 return
             }
@@ -124,4 +124,7 @@ object IdentifierParsers {
             }
         } while (true)
     }
+
+    const val SEPARATOR = "::"
 }
+
