@@ -6,8 +6,10 @@ import io.github.landgrafhomyak.icpp.parser.environment.Pos
 import io.github.landgrafhomyak.icpp.parser.environment.Error
 
 
-interface QualnameBuilder<CS : CollectedSubstring, P : Pos> {
+interface QualnameUsageBuilder<CS : CollectedSubstring, P : Pos> {
     fun addLevel(e: CS)
+
+    fun addTemplatedLevel(e: CS): TemplateUsageBuilder<CS, P>
 
     @Error
     fun unfinishedScopeResolutionOperator(start: P, end: P)

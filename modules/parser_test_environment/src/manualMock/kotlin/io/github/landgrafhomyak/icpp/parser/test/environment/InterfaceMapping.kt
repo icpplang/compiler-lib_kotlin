@@ -1,8 +1,6 @@
 package io.github.landgrafhomyak.icpp.parser.test.environment
 
-import io.github.landgrafhomyak.icpp.ast.builders.AttributesListBuilder
-import io.github.landgrafhomyak.icpp.ast.builders.QualnameBuilder
-import io.github.landgrafhomyak.icpp.parser.test.environment.mockimpl.AttributesListAsserter
+import io.github.landgrafhomyak.icpp.ast.builders.QualnameUsageBuilder
 import io.github.landgrafhomyak.icpp.parser.test.environment.mockimpl.QualnameAsserter
 import kotlin.reflect.KClass
 import kotlin.reflect.KFunction1
@@ -24,8 +22,7 @@ internal object InterfaceMapping {
         this[i](scopeAsserter) as I
 
     private val map = Builder.build {
-        add<AttributesListBuilder<*, *>>(::AttributesListAsserter)
-        add<QualnameBuilder<*, *>>(::QualnameAsserter)
+        add<QualnameUsageBuilder<*, *>>(::QualnameAsserter)
     }
 
 
