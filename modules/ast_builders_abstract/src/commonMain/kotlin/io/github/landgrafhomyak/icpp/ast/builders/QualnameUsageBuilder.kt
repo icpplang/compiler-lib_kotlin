@@ -14,8 +14,15 @@ interface QualnameUsageBuilder<CS : CollectedSubstring, P : Pos> {
     @Error
     fun unfinishedScopeResolutionOperator(start: P, end: P)
 
-    @HighlightOnly
-    fun separator(start: P, end: P)
+    @Error
+    fun unfinishedMemberAccessOperator(start: P, end: P)
+
+    fun scopeResolutionOperator(@HighlightOnly start: P, @HighlightOnly end: P)
+
+    @Error
+    fun scopeOfMemberResolutionOperator(start: P, end: P)
+
+    fun memberAccessOperator(@HighlightOnly start: P, @HighlightOnly end: P)
 
     @Error
     fun spacesBetweenSeparatorAndName(start: P, end: P)
@@ -25,4 +32,7 @@ interface QualnameUsageBuilder<CS : CollectedSubstring, P : Pos> {
 
     @Error
     fun addBadLevel(start: P, end: P)
+
+    @Error
+    fun addBadTemplatedLevel(start: P, end: P): TemplateUsageBuilder<CS, P>
 }
