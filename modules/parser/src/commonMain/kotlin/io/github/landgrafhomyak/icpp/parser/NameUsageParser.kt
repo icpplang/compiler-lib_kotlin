@@ -12,6 +12,9 @@ import kotlin.contracts.InvocationKind
 import kotlin.contracts.contract
 
 object NameUsageParser {
+    /**
+     * Consumes and returns valid name (e.g. not started from digit)
+     */
     @JvmStatic
     suspend fun <CS : CollectedSubstring, P : Pos> parseIdentifier(
         stream: SourceStream<CS, P>,
@@ -23,26 +26,41 @@ object NameUsageParser {
         return stream.collect(NameSymbolsPredicate)
     }
 
+    /**
+     * Checks that current char can be first in qualname. Must be called before [NameUsageParser.parseQualname]
+     *
+     * @param consumeInvalidIdentifier Same as in [NameUsageParser.parseQualname]
+     */
     @JvmStatic
     fun checkIsQualnameStart(c: Char, consumeInvalidIdentifier: Boolean = false) =
         if (consumeInvalidIdentifier) NameSymbolsPredicate.check(c)
         else NameSymbolsPredicate.checkFirstChar(c)
 
+    /**
+     * Parses level of qualname (name, spaces between name and template, template, spaces after template).
+     *
+     * @param superReturn Callback to return from [NameUsageParser.parseQualname], should be `{ return }` .
+     *                    Called when met char that is not part of qualname.
+     * @param ifNameNotFound Called when function doesn't found new level of qualname.
+     */
     @OptIn(ExperimentalContracts::class)
     @JvmStatic
     private suspend inline fun <CS : CollectedSubstring, P : Pos> parseLevel(
         stream: SourceStream<CS, P>,
         builder: QualnameUsageBuilder<CS, P>,
-        consumeSpaces: Boolean = true,
-        consumeInvalidIdentifier: Boolean = false,
-        onTrailingSpaces: (start: P, end: P) -> Unit
-    ): Boolean {
+        consumeSpaces: Boolean,
+        consumeInvalidIdentifier: Boolean,
+        superReturn: () -> Nothing,
+        ifNameNotFound: () -> Nothing
+    ) {
         contract {
-            callsInPlace(onTrailingSpaces, InvocationKind.AT_MOST_ONCE)
+            callsInPlace(superReturn, InvocationKind.AT_MOST_ONCE)
+            callsInPlace(ifNameNotFound, InvocationKind.AT_MOST_ONCE)
         }
 
-        if (stream.isEnded)
-            return true
+        @Suppress("RemoveRedundantQualifierName")
+        if (stream.isEnded || !NameUsageParser.checkIsQualnameStart(stream.current, consumeInvalidIdentifier))
+            ifNameNotFound()
 
         @Suppress("RemoveRedundantQualifierName")
         val name = NameUsageParser.parseIdentifier(stream)
@@ -51,7 +69,7 @@ object NameUsageParser {
 
         if (name == null) {
             if (!consumeInvalidIdentifier)
-                return true
+                ifNameNotFound()
 
             badNameStart = stream.pos
             stream.skip(NameSymbolsPredicate)
@@ -69,7 +87,7 @@ object NameUsageParser {
         if (SpaceSymbolsPredicate.check(stream.current)) {
             if (!consumeSpaces) {
                 if (name != null) builder.addLevel(name) else builder.addBadLevel(badNameStart!!, badNameEnd!!)
-                return false
+                return
             }
 
             spacesAfterNameStart = stream.pos
@@ -79,7 +97,7 @@ object NameUsageParser {
             if (stream.isEnded) // qualname ended, spaces not an error
             {
                 if (name != null) builder.addLevel(name) else builder.addBadLevel(badNameStart!!, badNameEnd!!)
-                return false
+                return
             }
 
         } else {
@@ -92,9 +110,12 @@ object NameUsageParser {
         // template opening brace
         if (stream.current != '$') {
             if (name != null) builder.addLevel(name) else builder.addBadLevel(badNameStart!!, badNameEnd!!)
-            if (spacesAfterNameStart != null)
-                onTrailingSpaces(spacesAfterNameStart, spacesAfterNameEnd!!)
-            return false
+            if (spacesAfterNameStart != null) {
+                if (stream.current != ':' && stream.current != '.')
+                    superReturn() // if no separator - qualname ended
+                builder.spacesBetweenSeparatorAndName(spacesAfterNameStart, spacesAfterNameEnd!!)
+            }
+            return
         }
 
         val templateBuilder: TemplateUsageBuilder<CS, P> =
@@ -112,15 +133,15 @@ object NameUsageParser {
             templateBuilder.openingBrace(templateOpeningBraceStart, stream.pos)
         }
         if (stream.isEnded)
-            return false
+            return
 
         // template args parser
         TemplateUsageParser.parseTemplateArgs(stream, templateBuilder)
 
         // template closing brace
         if (stream.isEnded || stream.current != '>') {
-            templateBuilder.missedClosingBrace(stream.pos)
-            return false
+            templateBuilder.missedSeparator(stream.pos)
+            return
         }
         val templateClosingBraceStart = stream.pos
         stream.move()
@@ -129,16 +150,28 @@ object NameUsageParser {
         // spaces after template
         if (!stream.isEnded && SpaceSymbolsPredicate.check(stream.current)) {
             if (!consumeSpaces)
-                return false
+                return
 
             val spacesAfterTemplateStart = stream.pos
             stream.skip(SpaceSymbolsPredicate)
-            onTrailingSpaces(spacesAfterTemplateStart, stream.pos)
+            if (stream.current != ':' && stream.current != '.')
+                superReturn() // if no separator - qualname ended
+            builder.spacesBetweenSeparatorAndName(spacesAfterTemplateStart, stream.pos)
         }
 
-        return false
+        return
     }
 
+    /**
+     * Function to parse qualnames in expressions.
+     *
+     * @param consumeSpaces Flag to consume [spaces][SpaceSymbolsPredicate] between qualname levels and separators
+     *                      (error) and after qualname (not an error).
+     *                      If not set, function will return after the first [space char][SpaceSymbolsPredicate].
+     *                      Doesn't affect to spaces inside expressions inside template arguments.
+     * @param consumeInvalidIdentifier Flag to parse invalid names (e.g. started from digits). This names reported
+     *                                 as errors.
+     */
     @JvmStatic
     @Suppress("RemoveRedundantQualifierName")
     suspend fun <CS : CollectedSubstring, P : Pos> parseQualname(
@@ -147,15 +180,9 @@ object NameUsageParser {
         consumeSpaces: Boolean = true,
         consumeInvalidIdentifier: Boolean = false
     ) {
-        if (stream.isEnded || !NameUsageParser.checkIsQualnameStart(stream.current, consumeInvalidIdentifier)) {
-            badParser("Qualname existence not pre-checked")
-        }
-
-        NameUsageParser.parseLevel(stream, builder, consumeSpaces, consumeInvalidIdentifier) { start, end ->
-            if (stream.current != ':' && stream.current != '.')
-                return // if no separator - qualname ended
-            builder.spacesBetweenSeparatorAndName(start, end)
-        }
+        NameUsageParser
+            .parseLevel(stream, builder, consumeSpaces, consumeInvalidIdentifier, { return })
+            { badParser("Qualname existence not pre-checked") }
 
 
         var isMember = false
@@ -208,12 +235,10 @@ object NameUsageParser {
 
             // next level
             NameUsageParser
-                .parseLevel(stream, builder, consumeSpaces, consumeInvalidIdentifier) { start, end ->
-                    if (stream.current != ':' && stream.current != '.')
-                        return // if no separator - qualname ended
-                    builder.spacesBetweenSeparatorAndName(start, end)
+                .parseLevel(stream, builder, consumeSpaces, consumeInvalidIdentifier, { return }) {
+                    builder.nothingAfterSeparator(stream.pos)
+                    return
                 }
-                .also { r -> if (!r) builder.nothingAfterSeparator(stream.pos) }
         } while (true)
     }
 
