@@ -1,6 +1,6 @@
 package io.github.landgrafhomyak.icpp.parser
 
-import io.github.landgrafhomyak.icpp.ast.builders.QualnameBuilder
+import io.github.landgrafhomyak.icpp.ast.builders.QualnameUsageBuilder
 import io.github.landgrafhomyak.icpp.parser.test.environment.CollectedSubstringTestImpl
 import io.github.landgrafhomyak.icpp.parser.test.environment.ParserTest
 import io.github.landgrafhomyak.icpp.parser.test.environment.PosTestImpl
@@ -8,11 +8,11 @@ import io.github.landgrafhomyak.icpp.parser.test.environment.TestCaseBuilder
 import kotlin.test.Test
 
 class QualnameTest {
-    private fun ParserTest.runQualnameTest(consumeSpaces: Boolean, consumeInvalidIdentifier: Boolean, testBuilder: TestCaseBuilder<QualnameBuilder<*, *>>.() -> Unit) =
+    private fun ParserTest.runQualnameTest(consumeSpaces: Boolean, consumeInvalidIdentifier: Boolean, testBuilder: TestCaseBuilder<QualnameUsageBuilder<*, *>>.() -> Unit) =
         this
             .build(testBuilder)
-            .run<QualnameBuilder<CollectedSubstringTestImpl, PosTestImpl>> { stream, builder ->
-                IdentifierParsers.parseQualname(
+            .run<QualnameUsageBuilder<CollectedSubstringTestImpl, PosTestImpl>> { stream, builder ->
+                NameUsageParser.parseQualname(
                     stream,
                     builder,
                     consumeSpaces = consumeSpaces,
@@ -23,32 +23,32 @@ class QualnameTest {
     @Test
     fun testValidOneLevel() = ParserTest
         .runQualnameTest(consumeSpaces = false, consumeInvalidIdentifier = false) {
-            substr(QualnameBuilder<*, *>::addLevel, "abc")
+            substr(QualnameUsageBuilder<*, *>::addLevel, "abc")
         }
 
     @Test
     fun testValidTwoLevels() = ParserTest
         .runQualnameTest(consumeSpaces = false, consumeInvalidIdentifier = false) {
-            substr(QualnameBuilder<*, *>::addLevel, "abc")
-            range(QualnameBuilder<*, *>::separator, IdentifierParsers.SEPARATOR)
-            substr(QualnameBuilder<*, *>::addLevel, "def")
+            substr(QualnameUsageBuilder<*, *>::addLevel, "abc")
+            range(QualnameUsageBuilder<*, *>::scopeResolutionOperator, NameUsageParser.SCOPE_RESOLUTION_OPERATOR)
+            substr(QualnameUsageBuilder<*, *>::addLevel, "def")
         }
 
     @Test
     fun testValidTwoLevelsWithSpacesOff1() = ParserTest
         .runQualnameTest(consumeSpaces = false, consumeInvalidIdentifier = false) {
-            substr(QualnameBuilder<*, *>::addLevel, "abc")
+            substr(QualnameUsageBuilder<*, *>::addLevel, "abc")
             +" "
-            +IdentifierParsers.SEPARATOR
+            +NameUsageParser.SCOPE_RESOLUTION_OPERATOR
             +"def"
         }
 
     @Test
     fun testValidTwoLevelsWithSpacesOff2() = ParserTest
         .runQualnameTest(consumeSpaces = false, consumeInvalidIdentifier = false) {
-            substr(QualnameBuilder<*, *>::addLevel, "abc")
-            range(QualnameBuilder<*, *>::separator, IdentifierParsers.SEPARATOR)
-            pos(QualnameBuilder<*, *>::nothingAfterSeparator)
+            substr(QualnameUsageBuilder<*, *>::addLevel, "abc")
+            range(QualnameUsageBuilder<*, *>::scopeResolutionOperator, NameUsageParser.SCOPE_RESOLUTION_OPERATOR)
+            pos(QualnameUsageBuilder<*, *>::nothingAfterSeparator)
             +" "
             +"def"
         }
@@ -56,63 +56,63 @@ class QualnameTest {
     @Test
     fun testValidTwoLevelsWithSpacesOn1() = ParserTest
         .runQualnameTest(consumeSpaces = true, consumeInvalidIdentifier = false) {
-            substr(QualnameBuilder<*, *>::addLevel, "abc")
-            range(QualnameBuilder<*, *>::spacesBetweenSeparatorAndName, "   ")
-            range(QualnameBuilder<*, *>::separator, IdentifierParsers.SEPARATOR)
-            substr(QualnameBuilder<*, *>::addLevel, "def")
+            substr(QualnameUsageBuilder<*, *>::addLevel, "abc")
+            range(QualnameUsageBuilder<*, *>::spacesBetweenSeparatorAndName, "   ")
+            range(QualnameUsageBuilder<*, *>::scopeResolutionOperator, NameUsageParser.SCOPE_RESOLUTION_OPERATOR)
+            substr(QualnameUsageBuilder<*, *>::addLevel, "def")
         }
 
     @Test
     fun testValidTwoLevelsWithSpacesOn2() = ParserTest
         .runQualnameTest(consumeSpaces = true, consumeInvalidIdentifier = false) {
-            substr(QualnameBuilder<*, *>::addLevel, "abc")
-            range(QualnameBuilder<*, *>::separator, IdentifierParsers.SEPARATOR)
-            range(QualnameBuilder<*, *>::spacesBetweenSeparatorAndName, "   ")
-            substr(QualnameBuilder<*, *>::addLevel, "def")
+            substr(QualnameUsageBuilder<*, *>::addLevel, "abc")
+            range(QualnameUsageBuilder<*, *>::scopeResolutionOperator, NameUsageParser.SCOPE_RESOLUTION_OPERATOR)
+            range(QualnameUsageBuilder<*, *>::spacesBetweenSeparatorAndName, "   ")
+            substr(QualnameUsageBuilder<*, *>::addLevel, "def")
         }
 
     @Test
     fun testValidTwoLevelsWithSpacesOn3() = ParserTest
         .runQualnameTest(consumeSpaces = true, consumeInvalidIdentifier = false) {
-            substr(QualnameBuilder<*, *>::addLevel, "abc")
-            range(QualnameBuilder<*, *>::spacesBetweenSeparatorAndName, "   ")
-            range(QualnameBuilder<*, *>::separator, IdentifierParsers.SEPARATOR)
-            range(QualnameBuilder<*, *>::spacesBetweenSeparatorAndName, "   ")
-            substr(QualnameBuilder<*, *>::addLevel, "def")
+            substr(QualnameUsageBuilder<*, *>::addLevel, "abc")
+            range(QualnameUsageBuilder<*, *>::spacesBetweenSeparatorAndName, "   ")
+            range(QualnameUsageBuilder<*, *>::scopeResolutionOperator, NameUsageParser.SCOPE_RESOLUTION_OPERATOR)
+            range(QualnameUsageBuilder<*, *>::spacesBetweenSeparatorAndName, "   ")
+            substr(QualnameUsageBuilder<*, *>::addLevel, "def")
         }
 
     @Test
     fun testInvalidSecondOff() = ParserTest
         .runQualnameTest(consumeSpaces = false, consumeInvalidIdentifier = false) {
-            substr(QualnameBuilder<*, *>::addLevel, "abc")
-            range(QualnameBuilder<*, *>::separator, IdentifierParsers.SEPARATOR)
-            pos(QualnameBuilder<*, *>::nothingAfterSeparator)
+            substr(QualnameUsageBuilder<*, *>::addLevel, "abc")
+            range(QualnameUsageBuilder<*, *>::scopeResolutionOperator, NameUsageParser.SCOPE_RESOLUTION_OPERATOR)
+            pos(QualnameUsageBuilder<*, *>::nothingAfterSeparator)
             +"0def"
         }
 
     @Test
     fun testInvalidSecondOn() = ParserTest
         .runQualnameTest(consumeSpaces = false, consumeInvalidIdentifier = true) {
-            substr(QualnameBuilder<*, *>::addLevel, "abc")
-            range(QualnameBuilder<*, *>::separator, IdentifierParsers.SEPARATOR)
-            range(QualnameBuilder<*, *>::addBadLevel, "0def")
+            substr(QualnameUsageBuilder<*, *>::addLevel, "abc")
+            range(QualnameUsageBuilder<*, *>::scopeResolutionOperator, NameUsageParser.SCOPE_RESOLUTION_OPERATOR)
+            range(QualnameUsageBuilder<*, *>::addBadLevel, "0def")
         }
 
     @Test
     fun testInvalidSecondOnWithSpacesOff1() = ParserTest
         .runQualnameTest(consumeSpaces = false, consumeInvalidIdentifier = true) {
-            substr(QualnameBuilder<*, *>::addLevel, "abc")
+            substr(QualnameUsageBuilder<*, *>::addLevel, "abc")
             +" "
-            +IdentifierParsers.SEPARATOR
+            +NameUsageParser.SCOPE_RESOLUTION_OPERATOR
             +"0def"
         }
 
     @Test
     fun testInvalidSecondOnWithSpacesOff2() = ParserTest
         .runQualnameTest(consumeSpaces = false, consumeInvalidIdentifier = true) {
-            substr(QualnameBuilder<*, *>::addLevel, "abc")
-            range(QualnameBuilder<*, *>::separator, IdentifierParsers.SEPARATOR)
-            pos(QualnameBuilder<*, *>::nothingAfterSeparator)
+            substr(QualnameUsageBuilder<*, *>::addLevel, "abc")
+            range(QualnameUsageBuilder<*, *>::scopeResolutionOperator, NameUsageParser.SCOPE_RESOLUTION_OPERATOR)
+            pos(QualnameUsageBuilder<*, *>::nothingAfterSeparator)
             +" "
             +"0def"
         }
@@ -120,9 +120,9 @@ class QualnameTest {
     @Test
     fun testInvalidSecondOnWithSpacesOff3() = ParserTest
         .runQualnameTest(consumeSpaces = false, consumeInvalidIdentifier = true) {
-            substr(QualnameBuilder<*, *>::addLevel, "abc")
+            substr(QualnameUsageBuilder<*, *>::addLevel, "abc")
             +" "
-            +IdentifierParsers.SEPARATOR
+            +NameUsageParser.SCOPE_RESOLUTION_OPERATOR
             +" "
             +"0def"
         }
@@ -130,33 +130,33 @@ class QualnameTest {
     @Test
     fun testInvalidSecondOnWithSpacesOn1() = ParserTest
         .runQualnameTest(consumeSpaces = true, consumeInvalidIdentifier = true) {
-            substr(QualnameBuilder<*, *>::addLevel, "abc")
-            range(QualnameBuilder<*, *>::spacesBetweenSeparatorAndName, "   ")
-            range(QualnameBuilder<*, *>::separator, IdentifierParsers.SEPARATOR)
-            range(QualnameBuilder<*, *>::addBadLevel, "0def")
+            substr(QualnameUsageBuilder<*, *>::addLevel, "abc")
+            range(QualnameUsageBuilder<*, *>::spacesBetweenSeparatorAndName, "   ")
+            range(QualnameUsageBuilder<*, *>::scopeResolutionOperator, NameUsageParser.SCOPE_RESOLUTION_OPERATOR)
+            range(QualnameUsageBuilder<*, *>::addBadLevel, "0def")
         }
 
     @Test
     fun testInvalidSecondOnWithSpacesOn2() = ParserTest
         .runQualnameTest(consumeSpaces = true, consumeInvalidIdentifier = true) {
-            substr(QualnameBuilder<*, *>::addLevel, "abc")
-            range(QualnameBuilder<*, *>::separator, IdentifierParsers.SEPARATOR)
-            range(QualnameBuilder<*, *>::spacesBetweenSeparatorAndName, "   ")
-            range(QualnameBuilder<*, *>::addBadLevel, "0def")
+            substr(QualnameUsageBuilder<*, *>::addLevel, "abc")
+            range(QualnameUsageBuilder<*, *>::scopeResolutionOperator, NameUsageParser.SCOPE_RESOLUTION_OPERATOR)
+            range(QualnameUsageBuilder<*, *>::spacesBetweenSeparatorAndName, "   ")
+            range(QualnameUsageBuilder<*, *>::addBadLevel, "0def")
         }
 
     @Test
     fun testInvalidSecondOnWithSpacesOn3() = ParserTest
         .runQualnameTest(consumeSpaces = true, consumeInvalidIdentifier = true) {
-            substr(QualnameBuilder<*, *>::addLevel, "abc")
-            range(QualnameBuilder<*, *>::spacesBetweenSeparatorAndName, "   ")
-            range(QualnameBuilder<*, *>::separator, IdentifierParsers.SEPARATOR)
-            range(QualnameBuilder<*, *>::spacesBetweenSeparatorAndName, "   ")
-            range(QualnameBuilder<*, *>::addBadLevel, "0def")
+            substr(QualnameUsageBuilder<*, *>::addLevel, "abc")
+            range(QualnameUsageBuilder<*, *>::spacesBetweenSeparatorAndName, "   ")
+            range(QualnameUsageBuilder<*, *>::scopeResolutionOperator, NameUsageParser.SCOPE_RESOLUTION_OPERATOR)
+            range(QualnameUsageBuilder<*, *>::spacesBetweenSeparatorAndName, "   ")
+            range(QualnameUsageBuilder<*, *>::addBadLevel, "0def")
         }
     @Test
     fun testOneInvalid() = ParserTest
         .runQualnameTest(consumeSpaces = false, consumeInvalidIdentifier = true) {
-            range(QualnameBuilder<*, *>::addBadLevel, "0abc")
+            range(QualnameUsageBuilder<*, *>::addBadLevel, "0abc")
         }
 }

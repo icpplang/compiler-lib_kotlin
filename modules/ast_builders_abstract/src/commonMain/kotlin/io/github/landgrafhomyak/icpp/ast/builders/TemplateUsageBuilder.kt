@@ -62,6 +62,12 @@ interface TemplateUsageBuilder<CS : CollectedSubstring, P : Pos> {
     fun unfinishedClosingBrace(start: P, end: P)
 
     /**
+     * Reports error when closing brace `>` is missed (EOF reached).
+     */
+    @Error
+    fun missedClosingBrace(pos: P)
+
+    /**
      * Finalizes builder.
      */
     fun closingBrace(@HighlightOnly start: P, @HighlightOnly end: P)

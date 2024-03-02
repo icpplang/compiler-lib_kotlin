@@ -108,7 +108,7 @@ object NameUsageParser {
         // stream end checked in spaces-consuming branch & no-spaces branch doesn't change stream
 
         // template opening brace
-        if (stream.current != '$') {
+        if (!TemplateUsageParser.checkArgListStart(stream.current)) {
             if (name != null) builder.addLevel(name) else builder.addBadLevel(badNameStart!!, badNameEnd!!)
             if (spacesAfterNameStart != null) {
                 if (stream.current != ':' && stream.current != '.')
@@ -123,17 +123,9 @@ object NameUsageParser {
             else builder.addBadTemplatedLevel(badNameStart!!, badNameEnd!!)
 
         if (spacesAfterNameStart != null)
-            templateBuilder.spacesBeforeOpeningBrace(spacesAfterNameStart, spacesAfterNameEnd!!)
-
-        val templateOpeningBraceStart = stream.pos
-        if (stream.move() || stream.current != '<') {
-            templateBuilder.unfinishedOpeningBrace(templateOpeningBraceStart, stream.pos)
-        } else {
-            stream.move()
-            templateBuilder.openingBrace(templateOpeningBraceStart, stream.pos)
-        }
-        if (stream.isEnded)
-            return
+            TemplateUsageParser.parseTemplateArgs(stream, templateBuilder, spacesAfterNameStart, spacesAfterNameEnd!!)
+        else
+            TemplateUsageParser.parseTemplateArgs(stream, templateBuilder)
 
         // template args parser
         TemplateUsageParser.parseTemplateArgs(stream, templateBuilder)
@@ -158,8 +150,6 @@ object NameUsageParser {
                 superReturn() // if no separator - qualname ended
             builder.spacesBetweenSeparatorAndName(spacesAfterTemplateStart, stream.pos)
         }
-
-        return
     }
 
     /**
