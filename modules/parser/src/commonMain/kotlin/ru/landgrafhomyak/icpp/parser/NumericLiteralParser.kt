@@ -53,7 +53,7 @@ object NumericLiteralParser {
 
     @Suppress("MemberVisibilityCanBePrivate")
     val DIGITS_SEPARATOR = '`'
-    suspend fun <P : Pos, CS : CollectedSubstring> parseNumericLiteral(
+    suspend fun <P : Pos, CS : CollectedSubstring> tryParseNumericLiteral(
         stream: SourceStream<P, CS>,
         factory: NumericLiteralBuilder.NumericLiteralFactory<P, CS>
     ): Boolean {
