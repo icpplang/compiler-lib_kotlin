@@ -8,7 +8,7 @@ import ru.landgrafhomyak.icpp.parser.environment.SourceStream
 import ru.landgrafhomyak.icpp.parser.environment.contains
 
 @Suppress(
-    "FunctionName", "RemoveRedundantQualifierName", "MemberVisibilityCanBePrivate",
+    "ClassName", "FunctionName", "LocalVariableName", "RemoveRedundantQualifierName", "MemberVisibilityCanBePrivate",
     "LiftReturnOrAssignment", "SimplifyBooleanWithConstants", "UnnecessaryVariable", "MayBeConstant"
 )
 /**
@@ -26,13 +26,13 @@ import ru.landgrafhomyak.icpp.parser.environment.contains
  */
 object NumericLiteralParser {
     /**
-     * Binds [predicate][Predicate] with [integer base][OldNumericLiteralBuilder.Base]
+     * Binds [predicate][Predicate] with [integer base][NumericLiteralBuilders.Radix]
      * to avoid typos and mistakes.
      *
      * @see NumericLiteralParser._BasedPredicate.base
-     * @see NumericLiteralParser._parseNonDecimalValue
+     * @see NumericLiteralParser._parseNonDecimalInteger
      */
-    sealed class _BasedPredicate(base: NumericLiteralBuilders.IntegerBase) : Predicate {
+    sealed class _BasedPredicate(base: NumericLiteralBuilders.Radix) : Predicate {
         /**
          * Integer base which this predicate can parse.
          *
@@ -45,7 +45,7 @@ object NumericLiteralParser {
     /**
      * [Predicate][Predicate] to parse binary values.
      */
-    object Digit2Predicate : _BasedPredicate(NumericLiteralBuilders.IntegerBase.BINARY) {
+    object Digit2Predicate : _BasedPredicate(NumericLiteralBuilders.Radix.BINARY) {
 
         override fun check(c: Char): Boolean = c == '0' || c == '1'
     }
@@ -54,7 +54,7 @@ object NumericLiteralParser {
     /**
      * [Predicate][Predicate] to parse octal values.
      */
-    object Digit8Predicate : _BasedPredicate(NumericLiteralBuilders.IntegerBase.OCTAL) {
+    object Digit8Predicate : _BasedPredicate(NumericLiteralBuilders.Radix.OCTAL) {
         override fun check(c: Char): Boolean = c in '0'..'7'
     }
 
@@ -69,21 +69,21 @@ object NumericLiteralParser {
     /**
      * [Predicate][Predicate] to parse hexadecimal values.
      */
-    object Digit16Predicate : _BasedPredicate(NumericLiteralBuilders.IntegerBase.HEXADECIMAL) {
+    object Digit16Predicate : _BasedPredicate(NumericLiteralBuilders.Radix.HEXADECIMAL) {
         override fun check(c: Char): Boolean = c in '0'..'9' || c in 'a'..'f' || c in 'A'..'F'
     }
 
     /**
      * [Predicate][Predicate] to parse sequences of zeros (`0`).
      */
-    private object ZeroPredicate : Predicate {
+    object ZeroPredicate : Predicate {
         override fun check(c: Char): Boolean = c == '0'
     }
 
     /**
      * [Predicate][Predicate] to parse sequences of digit separators (`` ` ``).
      */
-    private object DigitsSeparatorPredicate : Predicate {
+    object DigitsSeparatorPredicate : Predicate {
         override fun check(c: Char): Boolean = c == DIGITS_SEPARATOR
     }
 
@@ -100,8 +100,14 @@ object NumericLiteralParser {
      */
     val DIGITS_SEPARATOR = '`'
 
+    /**
+     * Symbol used to separate integer part of decimal number from fractional.
+     */
     val DOT = '.'
 
+    /**
+     * Symbol indicating start of exponent.
+     */
     val EXPONENT_MARK_FIRST_CHAR = 'e'
 
     suspend fun <P : Pos, CS : CollectedSubstring, R> tryParseNumericLiteral(
@@ -119,8 +125,8 @@ object NumericLiteralParser {
                 if (stream.isEnded)
                     return state.justDigitSeparators(sepsStart, stream.pos)
                 when (stream.current) {
-                    '0' -> return this.parseZeroDigit(stream, state.digitSeparatorsThenZero(sepsStart, stream.pos))
-                    in '1'..'9' -> return this.parseDecimalNumericLiteral(stream, state.digitSeparatorsThenDecimal(sepsStart, stream.pos))
+                    '0' -> return this.parseZeroDigit(stream, state.digitSeparators_zero(sepsStart, stream.pos))
+                    in '1'..'9' -> return this.parseDecimalNumericLiteral(stream, state.digitSeparators_decimal(sepsStart, stream.pos))
                     else -> return state.justDigitSeparators(sepsStart, stream.pos)
                 }
             }
@@ -143,64 +149,64 @@ object NumericLiteralParser {
 
         val zerosStart = stream.pos
         if (stream.move())
-            return this._parseFractionalPart(stream, state.justSingleDecimalZero(zerosStart, stream.pos))
+            return this._parseDecimalFractionalPart(stream, state.justSingleDecimalZero(zerosStart, stream.pos))
 
         when (stream.current) {
-            'x' -> return this._parseBasedInteger(stream, state, zerosStart, Digit16Predicate)
-            'b' -> return this._parseBasedInteger(stream, state, zerosStart, Digit2Predicate)
-            'o' -> return this._parseBasedInteger(stream, state, zerosStart, Digit8Predicate)
+            'x' -> return this._parseNonDecimalInteger(stream, state, zerosStart, Digit16Predicate)
+            'b' -> return this._parseNonDecimalInteger(stream, state, zerosStart, Digit2Predicate)
+            'o' -> return this._parseNonDecimalInteger(stream, state, zerosStart, Digit8Predicate)
             in '1'..'9' -> return this.parseDecimalNumericLiteral(stream, state.leadingDecimalZero(zerosStart, stream.pos))
             '0' -> {
                 stream.skip(ZeroPredicate)
                 if (stream.isEnded)
-                    return this._parseFractionalPart(stream, state.severalDecimalZeros(zerosStart, stream.pos))
-                return this._dispatchLeadingZero7digitSeparators(
+                    return this._parseDecimalFractionalPart(stream, state.severalDecimalZeros(zerosStart, stream.pos))
+                return this.__dispatchLeadingZero7digitSeparators(
                     stream = stream, zerosStart = zerosStart,
-                    justZerosWithTrailingDigitSeparators = state::justSingleDecimalZeroWithTrailingDigitSeparators,
-                    leadingZerosThenSingleDigitSeparator = state::leadingDecimalZeroThenSingleDigitSeparator,
-                    leadingZerosThenSeveralDigitSeparators = state::leadingDecimalZeroThenSeveralDigitSeparator
+                    justZerosWithTrailingDigitSeparators = state::justSingleDecimalZero_trailingDigitSeparators,
+                    leadingZerosThenSingleDigitSeparator = state::leadingDecimalZero_singleDigitSeparator,
+                    leadingZerosThenSeveralDigitSeparators = state::leadingDecimalZero_severalDigitSeparators
                 )
             }
 
             DIGITS_SEPARATOR -> {
-                return this._dispatchLeadingZero7digitSeparators(
+                return this.__dispatchLeadingZero7digitSeparators(
                     stream = stream, zerosStart = zerosStart,
-                    justZerosWithTrailingDigitSeparators = state::severalDecimalZerosWithTrailingDigitSeparators,
-                    leadingZerosThenSingleDigitSeparator = state::leadingDecimalZeroThenSingleDigitSeparator,
-                    leadingZerosThenSeveralDigitSeparators = state::leadingDecimalZeroThenSeveralDigitSeparator
+                    justZerosWithTrailingDigitSeparators = state::severalDecimalZeros_trailingDigitSeparators,
+                    leadingZerosThenSingleDigitSeparator = state::leadingDecimalZero_singleDigitSeparator,
+                    leadingZerosThenSeveralDigitSeparators = state::leadingDecimalZero_severalDigitSeparators
                 )
             }
 
-            else -> return this._parseFractionalPart(stream, state.justSingleDecimalZero(zerosStart, stream.pos))
+            else -> return this._parseDecimalFractionalPart(stream, state.justSingleDecimalZero(zerosStart, stream.pos))
         }
     }
 
-    private suspend inline fun <P : Pos, CS : CollectedSubstring, R> _dispatchLeadingZero7digitSeparators(
+    private suspend inline fun <P : Pos, CS : CollectedSubstring, R> __dispatchLeadingZero7digitSeparators(
         stream: SourceStream<P, CS>,
         zerosStart: P,
-        justZerosWithTrailingDigitSeparators: (zS: P, zE: P, sS: P, sE: P) -> NumericLiteralBuilders.FloatingNumberDot<P, CS, R>,
-        leadingZerosThenSingleDigitSeparator: (zS: P, zE: P, sS: P, sE: P) -> NumericLiteralBuilders.DecimalValue<P, CS, R>,
-        leadingZerosThenSeveralDigitSeparators: (zS: P, zE: P, sS: P, sE: P) -> NumericLiteralBuilders.DecimalValue<P, CS, R>
+        justZerosWithTrailingDigitSeparators: (zS: P, zE: P, sS: P, sE: P) -> NumericLiteralBuilders.DecimalFractionalPartDot<P, CS, R>,
+        leadingZerosThenSingleDigitSeparator: (zS: P, zE: P, sS: P, sE: P) -> NumericLiteralBuilders.DecimalIntegerPartValue<P, CS, R>,
+        leadingZerosThenSeveralDigitSeparators: (zS: P, zE: P, sS: P, sE: P) -> NumericLiteralBuilders.DecimalIntegerPartValue<P, CS, R>
     ): NumericLiteralBuilders.GarbageAfterNumericLiteral<P, CS, R> {
         val zerosEnd = stream.pos
         if (stream.move())
-            return this._parseFractionalPart(stream, justZerosWithTrailingDigitSeparators(zerosStart, zerosEnd, zerosEnd, stream.pos))
+            return this._parseDecimalFractionalPart(stream, justZerosWithTrailingDigitSeparators(zerosStart, zerosEnd, zerosEnd, stream.pos))
 
         when (stream.current) {
             DIGITS_SEPARATOR -> {
                 stream.skip(DigitsSeparatorPredicate)
                 if (stream.isEnded || stream.current !in '0'..'9')
-                    return this._parseFractionalPart(stream, justZerosWithTrailingDigitSeparators(zerosStart, zerosEnd, zerosEnd, stream.pos))
+                    return this._parseDecimalFractionalPart(stream, justZerosWithTrailingDigitSeparators(zerosStart, zerosEnd, zerosEnd, stream.pos))
                 return this._parseDecimalIntegerPart(stream, leadingZerosThenSeveralDigitSeparators(zerosStart, zerosEnd, zerosEnd, stream.pos))
             }
 
             in '0'..'9' -> return this._parseDecimalIntegerPart(stream, leadingZerosThenSingleDigitSeparator(zerosStart, zerosEnd, zerosEnd, stream.pos))
 
-            else -> return this._parseFractionalPart(stream, justZerosWithTrailingDigitSeparators(zerosStart, zerosEnd, zerosEnd, stream.pos))
+            else -> return this._parseDecimalFractionalPart(stream, justZerosWithTrailingDigitSeparators(zerosStart, zerosEnd, zerosEnd, stream.pos))
         }
     }
 
-    private suspend fun <P : Pos, CS : CollectedSubstring, R> _parseBasedInteger(
+    private suspend fun <P : Pos, CS : CollectedSubstring, R> _parseNonDecimalInteger(
         stream: SourceStream<P, CS>,
         zeroState: NumericLiteralBuilders.LeadingZero<P, CS, R>,
         zeroStart: P,
@@ -208,21 +214,21 @@ object NumericLiteralParser {
     ): NumericLiteralBuilders.GarbageAfterNumericLiteral<P, CS, R> {
         val zeroEnd = stream.pos
         if (stream.move())
-            return zeroState.justSingleZeroThenBasedIntegerMark(zeroStart, zeroEnd, zeroEnd, stream.pos, predicate.base)
+            return zeroState.justSingleZero_radix(zeroStart, zeroEnd, zeroEnd, stream.pos, predicate.base)
 
-        val state: NumericLiteralBuilders.BasedIntegerValue<P, CS, R>
+        val state: NumericLiteralBuilders.NonDecimalIntegerValue<P, CS, R>
         when (stream.current) {
             DIGITS_SEPARATOR -> {
                 val sepsStart = stream.pos
                 stream.skip(DigitsSeparatorPredicate)
                 if (stream.isEnded || !predicate.check(stream.current))
-                    return zeroState.justSingleZeroThenBasedIntegerMarkThenDigitSeparators(
+                    return zeroState.justSingleZero_radix_digitSeparators(
                         zeroStart, zeroEnd,
                         zeroEnd, sepsStart,
                         predicate.base,
                         sepsStart, stream.pos
                     )
-                state = zeroState.justSingleZeroThenBasedIntegerMarkThenLeadingDigitSeparatorsThenValue(
+                state = zeroState.justSingleZero_radix_leadingDigitSeparators_value(
                     zeroStart, zeroEnd,
                     zeroEnd, sepsStart,
                     predicate.base,
@@ -230,30 +236,30 @@ object NumericLiteralParser {
                 )
             }
 
-            in predicate -> state = zeroState.justSingleZeroThenBasedIntegerMarkThenValue(
+            in predicate -> state = zeroState.justSingleZero_radix_value(
                 zeroStart, zeroEnd,
                 zeroEnd, stream.pos,
                 predicate.base
             )
 
-            else -> return zeroState.justSingleZeroThenBasedIntegerMark(zeroStart, zeroEnd, zeroEnd, stream.pos, predicate.base)
+            else -> return zeroState.justSingleZero_radix(zeroStart, zeroEnd, zeroEnd, stream.pos, predicate.base)
         }
 
-        return this._collectValue(
+        return this.__collectValue(
             stream = stream,
+            predicate = predicate,
             continuation = { _, r -> r },
-            lastChunk = state::lastBasedIntegerValue,
-            lastChunkThenTrailingDigitSeparators = state::lastBasedIntegerValueThenTrailingDigitSeparators,
-            chunkThenSingleDigitSeparator = state::basedIntegerValueThenSingleDigitSeparator,
-            chunkThenSeveralDigitSeparators = state::basedIntegerValueThenSeveralDigitSeparators,
-
+            lastChunk = state::lastNonDecimalIntegerValue,
+            lastChunkThenTrailingDigitSeparators = state::lastNonDecimalIntegerValue_trailingDigitSeparators,
+            chunkThenSingleDigitSeparator = state::nonDecimalIntegerValue_singleDigitSeparator,
+            chunkThenSeveralDigitSeparators = state::nonDecimalIntegerValue_severalDigitSeparators,
             )
     }
 
 
     suspend fun <P : Pos, CS : CollectedSubstring, R> parseDecimalNumericLiteral(
         stream: SourceStream<P, CS>,
-        state: NumericLiteralBuilders.DecimalValue<P, CS, R>
+        state: NumericLiteralBuilders.DecimalIntegerPartValue<P, CS, R>
     ): NumericLiteralBuilders.GarbageAfterNumericLiteral<P, CS, R> {
         if (stream.isEnded) badParserExpectedCharBadStreamEnded("in '1'..'9'")
         when (stream.current) {
@@ -268,112 +274,187 @@ object NumericLiteralParser {
 
     private suspend fun <P : Pos, CS : CollectedSubstring, R> _parseDecimalIntegerPart(
         stream: SourceStream<P, CS>,
-        state: NumericLiteralBuilders.DecimalValue<P, CS, R>
+        state: NumericLiteralBuilders.DecimalIntegerPartValue<P, CS, R>
     ): NumericLiteralBuilders.GarbageAfterNumericLiteral<P, CS, R> {
-        return this._collectValue(
+        return this.__collectValue(
             stream = stream,
-            continuation = this::_parseFractionalPart,
+            predicate = Digit10Predicate,
+            continuation = this::_parseDecimalFractionalPart,
             lastChunk = state::lastIntegerPartValue,
-            lastChunkThenTrailingDigitSeparators = state::lastIntegerPartValueThenTrailingDigitSeparators,
-            chunkThenSingleDigitSeparator = state::integerPartValueThenSingleDigitSeparator,
-            chunkThenSeveralDigitSeparators = state::integerPartValueThenSeveralDigitSeparators
+            lastChunkThenTrailingDigitSeparators = state::lastIntegerPartValue_trailingDigitSeparators,
+            chunkThenSingleDigitSeparator = state::integerPartValue_singleDigitSeparator,
+            chunkThenSeveralDigitSeparators = state::integerPartValue_severalDigitSeparators
         )
     }
 
-    private suspend fun <P : Pos, CS : CollectedSubstring, R> _parseFractionalPart(
+    private suspend fun <P : Pos, CS : CollectedSubstring, R> _parseDecimalFractionalPart(
         stream: SourceStream<P, CS>,
-        dotState: NumericLiteralBuilders.FloatingNumberDot<P, CS, R>
+        dotState: NumericLiteralBuilders.DecimalFractionalPartDot<P, CS, R>
     ): NumericLiteralBuilders.GarbageAfterNumericLiteral<P, CS, R> {
         if (stream.isEnded || stream.current != DOT) return this._parseExponent(stream, dotState.noFractionalPart())
 
         val dotStart = stream.pos
         if (stream.move())
-            return dotState.dot(dotStart, stream.pos).missedFractionalPart(stream.pos).noExponent()
-        val state = dotState.dot(dotStart, stream.pos)
+            return dotState.dot(dotStart, stream.pos).noExponent()
+        val dotEnd = stream.pos
 
-        val stateEx: NumericLiteralBuilders.FractionalPartEx<P, CS, R>
+        val state: NumericLiteralBuilders.DecimalFractionalPartValue<P, CS, R>
         when (stream.current) {
             DIGITS_SEPARATOR -> {
                 val sepsStart = stream.pos
                 stream.skip(DigitsSeparatorPredicate)
                 if (stream.current in '0'..'9')
-                    stateEx = state.leadingDigitSeparatorsBeforeFractionalPartValue(sepsStart, stream.pos)
+                    state = dotState.dot_leadingDigitSeparators_value(dotStart, dotEnd, sepsStart, stream.pos)
                 else
-                    return this._parseExponent(stream, state.missedFractionalPartButDigitSeparators(sepsStart, stream.pos))
+                    return this._parseExponent(stream, dotState.dot_justDigitSeparators(dotStart, dotEnd, sepsStart, stream.pos))
             }
 
-            in '0'..'9' -> stateEx = state.noLeadingDigitSeparatorsBeforeFractionalPartValue()
+            in '0'..'9' -> state = dotState.dot_value(dotStart, dotEnd)
 
-            else -> return this._parseExponent(stream, state.missedFractionalPart(stream.pos))
+            else -> return this._parseExponent(stream, dotState.dot(dotStart, dotEnd))
         }
 
-        return this._collectValue(
+        return this.__collectValue(
             stream = stream,
+            predicate = Digit10Predicate,
             continuation = this::_parseExponent,
-            lastChunk = stateEx::lastFractionalPartValue,
-            lastChunkThenTrailingDigitSeparators = stateEx::lastFractionalPartValueThenTrailingDigitSeparators,
-            chunkThenSingleDigitSeparator = stateEx::fractionalPartValueThenSingleDigitSeparator,
-            chunkThenSeveralDigitSeparators = stateEx::fractionalPartValueThenSeveralDigitSeparators
+            lastChunk = state::lastFractionalPartValue,
+            lastChunkThenTrailingDigitSeparators = state::lastFractionalPartValue_trailingDigitSeparators,
+            chunkThenSingleDigitSeparator = state::fractionalPartValue_singleDigitSeparator,
+            chunkThenSeveralDigitSeparators = state::fractionalPartValue_severalDigitSeparators
         )
     }
 
     private suspend fun <P : Pos, CS : CollectedSubstring, R> _parseExponent(
         stream: SourceStream<P, CS>,
-        markState: NumericLiteralBuilders.ExponentMark<P, CS, R>
+        state: NumericLiteralBuilders.Exponent<P, CS, R>
     ): NumericLiteralBuilders.GarbageAfterNumericLiteral<P, CS, R> {
-        if (stream.isEnded || stream.current != EXPONENT_MARK_FIRST_CHAR) return markState.noExponent()
-        val markStart = stream.pos
+        if (stream.isEnded || stream.current != EXPONENT_MARK_FIRST_CHAR) return state.noExponent()
+        val eStart = stream.pos
         if (stream.move())
-            return markState.exponent(markStart, stream.pos).signMissed(stream.pos).missedExponentValue(stream.pos)
-        val signState = markState.exponent(markStart, stream.pos)
+            return state.justE(eStart, stream.pos)
+        val eEnd = stream.pos
 
-        val state: NumericLiteralBuilders.ExponentValue<P, CS, R>
+        val sign: NumericLiteralBuilders.ExponentSign
         when (stream.current) {
             '+' -> {
-                val signStart = stream.pos
-                if (stream.move())
-                    return signState.positiveExponent(signStart, stream.pos).missedExponentValue(stream.pos)
-                state = signState.positiveExponent(signStart, stream.pos)
+                sign = NumericLiteralBuilders.ExponentSign.PLUS
             }
 
             '-' -> {
-                val signStart = stream.pos
-                if (stream.move())
-                    return signState.negativeExponent(signStart, stream.pos).missedExponentValue(stream.pos)
-                state = signState.negativeExponent(signStart, stream.pos)
+                sign = NumericLiteralBuilders.ExponentSign.MINUS
             }
 
             else -> {
-                state = signState.signMissed(stream.pos)
+                return this.__parseExponentValue_noSign(
+                    stream,
+                    eStart, eEnd,
+                    justValue = state::e_value,
+                    justSeparators = state::e_digitSeparators,
+                    leadingSeparators_value = state::e_leadingDigitSeparators_value,
+                    value_trailingSeparators = state::e_value_trailingDigitSeparators,
+                    missedValue = state::justE
+                )
             }
         }
+        val signStart: P = stream.pos
+        if (stream.move())
+            return state.e_sign(
+                eStart, eEnd,
+                signStart, stream.pos, sign
+            )
+        return this.__parseExponentValue_sign(
+            stream, state,
+            eStart, eEnd,
+            signStart, stream.pos, sign
+        )
+    }
 
+
+    private inline suspend fun <P : Pos, CS : CollectedSubstring, R> __parseExponentValue_noSign(
+        stream: SourceStream<P, CS>,
+        eStart: P, eEnd: P,
+        justValue: (P, P, CS) -> NumericLiteralBuilders.GarbageAfterNumericLiteral<P, CS, R>,
+        justSeparators: (P, P, P, P) -> NumericLiteralBuilders.GarbageAfterNumericLiteral<P, CS, R>,
+        leadingSeparators_value: (P, P, P, P, CS) -> NumericLiteralBuilders.GarbageAfterNumericLiteral<P, CS, R>,
+        value_trailingSeparators: (P, P, CS, P, P) -> NumericLiteralBuilders.GarbageAfterNumericLiteral<P, CS, R>,
+        missedValue: (P, P) -> NumericLiteralBuilders.GarbageAfterNumericLiteral<P, CS, R>
+    ): NumericLiteralBuilders.GarbageAfterNumericLiteral<P, CS, R> {
         when (stream.current) {
             DIGITS_SEPARATOR -> {
                 val sepsStart = stream.pos
                 stream.skip(DigitsSeparatorPredicate)
                 if (stream.isEnded || stream.current !in '0'..'9')
-                    return state.missedExponentValueButDigitsSeparators(sepsStart)
+                    return justSeparators(eStart, eEnd, sepsStart, stream.pos)
                 val sepsEnd = stream.pos
-                return state.exponentValueWithLeadingDigitSeparators(sepsStart, sepsEnd, stream.collect(Digit10Predicate))
+                return leadingSeparators_value(eStart, eEnd, sepsStart, sepsEnd, stream.collect(Digit10Predicate))
             }
 
             in '0'..'9' -> {
                 val value = stream.collect(Digit10Predicate)
                 if (stream.isEnded || stream.current != DIGITS_SEPARATOR)
-                    return state.exponentValue(value)
+                    return justValue(eStart, eEnd, value)
                 val sepsStart = stream.pos
                 stream.skip(DigitsSeparatorPredicate)
-                return state.exponentValueWithTrailingDigitSeparators(value, sepsStart, stream.pos)
+                return value_trailingSeparators(eStart, eEnd, value, sepsStart, stream.pos)
             }
 
-            else -> return state.missedExponentValue(stream.pos)
+            else -> return missedValue(eStart, eEnd)
         }
     }
 
 
-    private suspend inline fun <P : Pos, CS : CollectedSubstring, Z, R> _collectValue(
+    private suspend fun <P : Pos, CS : CollectedSubstring, R> __parseExponentValue_sign(
         stream: SourceStream<P, CS>,
+        state: NumericLiteralBuilders.Exponent<P, CS, R>,
+        eStart: P, eEnd: P,
+        signStart: P, signEnd: P, sign: NumericLiteralBuilders.ExponentSign,
+    ): NumericLiteralBuilders.GarbageAfterNumericLiteral<P, CS, R> =
+        this.__parseExponentValue_noSign(
+            stream,
+            eStart, eEnd,
+            justValue = { eS, eE, v ->
+                state.e_sign_value(
+                    eS, eE,
+                    signStart, signEnd, sign, v
+                )
+            },
+            justSeparators = { eS, eE, sS, sE ->
+                state.e_sign_digitSeparators(
+                    eS, eE,
+                    signStart, signEnd, sign,
+                    sS, sE
+                )
+            },
+            leadingSeparators_value = { eS, eE, sS, sE, v ->
+                state.e_sign_leadingDigitSeparators_value(
+                    eS, eE,
+                    signStart, signEnd, sign,
+                    sS, sE,
+                    v
+                )
+            },
+            value_trailingSeparators = { eS, eE, v, sS, sE ->
+                state.e_sign_value_trailingDigitSeparators(
+                    eS, eE,
+                    signStart, signEnd, sign,
+                    v,
+                    sS, sE
+                )
+            },
+            missedValue = { eS, eE -> state.e_sign(eS, eE, signStart, signEnd, sign) }
+        )
+
+    /**
+     * Collects digits and separators between them. Stream position must be at digit.
+     *
+     * @see NumericLiteralBuilders.NonDecimalIntegerValue
+     * @see NumericLiteralBuilders.DecimalIntegerPartValue
+     * @see NumericLiteralBuilders.DecimalFractionalPartValue
+     */
+    private suspend inline fun <P : Pos, CS : CollectedSubstring, Z, R> __collectValue(
+        stream: SourceStream<P, CS>,
+        predicate: Predicate,
         @Suppress("REDUNDANT_INLINE_SUSPEND_FUNCTION_TYPE") continuation: suspend (SourceStream<P, CS>, Z) -> NumericLiteralBuilders.GarbageAfterNumericLiteral<P, CS, R>,
         lastChunk: (CS) -> Z,
         lastChunkThenTrailingDigitSeparators: (CS, P, P) -> Z,
@@ -381,7 +462,7 @@ object NumericLiteralParser {
         chunkThenSeveralDigitSeparators: (CS, P, P) -> Unit
     ): NumericLiteralBuilders.GarbageAfterNumericLiteral<P, CS, R> {
         while (true) {
-            val chunk = stream.collect(Digit10Predicate)
+            val chunk = stream.collect(predicate)
             if (stream.isEnded)
                 return continuation(stream, lastChunk(chunk))
 
@@ -393,7 +474,7 @@ object NumericLiteralParser {
                 return continuation(stream, lastChunkThenTrailingDigitSeparators(chunk, sepsStart, stream.pos))
 
             when (stream.current) {
-                in '0'..'9' -> {
+                in predicate -> {
                     chunkThenSingleDigitSeparator(chunk, sepsStart, stream.pos)
                     continue
                 }
@@ -404,7 +485,7 @@ object NumericLiteralParser {
                         return continuation(stream, lastChunkThenTrailingDigitSeparators(chunk, sepsStart, stream.pos))
 
                     when (stream.current) {
-                        in '0'..'9' -> {
+                        in predicate -> {
                             chunkThenSeveralDigitSeparators(chunk, sepsStart, stream.pos)
                             continue
                         }
