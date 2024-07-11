@@ -1,0 +1,16 @@
+version: "3"
+
+services:
+  build7test:
+    image: icpp-compiler-lib_kotlin:draft-s0r0.0-impl0.1
+    build:
+      dockerfile: ./Dockerfile
+    tty: true
+    volumes:
+      - type: bind
+        source: ./../m2-repo/
+        target: /root/m2-repo/
+      - type: bind
+        source: ./../modules/
+        target: /root/modules/
+        read_only: true

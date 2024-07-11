@@ -1,9 +1,13 @@
-/.gradle/
-/.idea/
 build/
-/gradle/
+/.idea/
+
+.gradle/
+gradle/
+gradlew*
 
 *.class
 *.jar
 *.icpp
 *.iLpp
+
+/m2-repo/
