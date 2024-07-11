@@ -1,11 +1,22 @@
-//import ru.landgrafhomyak.icpp.compiler_lib._build_utilities.Scripts
-//import ru.landgrafhomyak.icpp.compiler_lib._build_utilities.Versions
+import ru.landgrafhomyak.icpp.compiler_lib._build_utilities.InitBuild
+import ru.landgrafhomyak.icpp.compiler_lib._build_utilities.Modules
+import ru.landgrafhomyak.icpp.compiler_lib._build_utilities.kotlin
 
-plugins {
-    kotlin("multiplatform")
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath("ru.landgrafhomyak.icpp.compiler-lib:_build_utilities")
+    }
 }
-apply(from = rootDir.resolve("../_build_utilities/scripts/init_build.gradle.kts"))
 
+repositories {
+    mavenCentral()
+}
+
+apply<InitBuild>()
 
 kotlin {
     jvm {}
@@ -13,8 +24,8 @@ kotlin {
     sourceSets {
         val commonMain by getting {
             dependencies {
-                compileOnly("ru.landgrafhomyak.icpp.compiler-lib:parser_environment")
-                compileOnly("ru.landgrafhomyak.icpp.compiler-lib:ast_builders_abstract")
+                compileOnly(Modules.named("parser_environment"))
+                compileOnly(Modules.named("ast_builders_abstract"))
             }
         }
 

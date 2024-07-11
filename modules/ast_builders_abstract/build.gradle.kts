@@ -1,8 +1,21 @@
-plugins {
-    kotlin("multiplatform")
+import ru.landgrafhomyak.icpp.compiler_lib._build_utilities.InitBuild
+import ru.landgrafhomyak.icpp.compiler_lib._build_utilities.Modules
+import ru.landgrafhomyak.icpp.compiler_lib._build_utilities.kotlin
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath("ru.landgrafhomyak.icpp.compiler-lib:_build_utilities")
+    }
 }
 
-apply(from=rootDir.resolve("../_build_utilities/scripts/init_build.gradle.kts"))
+repositories {
+    mavenCentral()
+}
+
+apply<InitBuild>()
 
 kotlin {
     jvm {}
@@ -10,7 +23,7 @@ kotlin {
     sourceSets {
         val commonMain by getting {
             dependencies {
-                compileOnly("ru.landgrafhomyak.icpp.compiler-lib:parser_environment")
+                compileOnly(Modules.named("parser_environment"))
             }
         }
     }

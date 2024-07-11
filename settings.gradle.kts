@@ -1,37 +1,17 @@
-//rootProject.name = "icpp"
-//
-//pluginManagement {
-//    repositories {
-//        mavenCentral()
-//        maven(url = rootDir.resolve("./m2-repo/"))
-//    }
-//
-//    buildscript {
-//        dependencies {
-//            classpath("ru.landgrafhomyak.icpp.compiler-lib:_build_utilities:-")
-//        }
-//    }
-//}
-//
-//buildscript {
-//    repositories {
-//        mavenCentral()
-//        maven(url = rootDir.resolve("./m2-repo/"))
-//    }
-//
-//    dependencies {
-//        classpath("ru.landgrafhomyak.icpp.compiler-lib:_build_utilities:-")
-//    }
-//}
-
+rootDir.resolve("./kotlin-version.txt")
+    .readText()
+    .also { s ->
+        if (Regex("^[^\\s:]+$").matchEntire(s) == null)
+            throw IllegalArgumentException("Bad kotlin-version.txt")
+    }
 
 fun includeBuildModule(name: String) {
     includeBuild("./modules/$name") {
         this@includeBuild.name = name
 
         dependencySubstitution {
-//            substitute(module("ru.landgrafhomyak.icpp.compiler-lib:$name"))
-//                .using(project(":"))
+            substitute(module("ru.landgrafhomyak.icpp.compiler-lib:$name"))
+                .using(project(":"))
         }
     }
 }

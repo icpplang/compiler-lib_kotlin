@@ -1,26 +1,23 @@
 plugins {
     kotlin("jvm") version embeddedKotlinVersion
 //    `maven-publish`
+
 }
 
 repositories {
     mavenCentral()
-    maven("https://repo.gradle.org/gradle/libs-releases-local/")
-    flatDir {
-        name = "internal"
-        dirs(projectDir.resolve("./../../m2-repo/"))
-    }
+//    maven("https://repo.gradle.org/gradle/libs-releases-local/")
 }
+group = "ru.landgrafhomyak.icpp.compiler-lib"
 
-val gradleApiVersion = "6.1.1"
+val gradleApiVersion = gradle.gradleVersion
 
 kotlin {
     sourceSets {
         val main by getting {
             dependencies {
-                compileOnly("org.gradle:gradle-core:$gradleApiVersion")
-                compileOnly("org.gradle:gradle-core-api:$gradleApiVersion")
-                compileOnly("org.gradle:gradle-kotlin-dsl:$gradleApiVersion")
+                compileOnly("dev.gradleplugins:gradle-api:${gradle.gradleVersion}")
+                implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:${rootDir.resolve("./../../kotlin-version.txt").readText()}")
             }
         }
     }
