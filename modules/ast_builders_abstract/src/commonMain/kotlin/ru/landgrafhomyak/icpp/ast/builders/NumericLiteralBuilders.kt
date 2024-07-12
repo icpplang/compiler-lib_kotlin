@@ -1,12 +1,13 @@
 package ru.landgrafhomyak.icpp.ast.builders
 
+import ru.landgrafhomyak.icpp.parser.environment.BuilderState
 import ru.landgrafhomyak.icpp.parser.environment.CollectedSubstring
 import ru.landgrafhomyak.icpp.parser.environment.Finalizer
 import ru.landgrafhomyak.icpp.parser.environment.Pos
 import ru.landgrafhomyak.icpp.parser.environment.Error
 
 @Suppress("FunctionName", "ClassName")
-object NumericLiteralBuilders {
+sealed interface NumericLiteralBuilders {
     /**
      * Helper interface for states that can continued by numeric literal. Contains all possible starts of numeric literal.
      *
@@ -23,7 +24,7 @@ object NumericLiteralBuilders {
      * @param CS Type of [collected substring][CollectedSubstring] implementation expected by this builder.
      * @param R State that will be returned after finishing parsing numeric literal.
      */
-    interface _NumericLiteralFactory<P : Pos, CS : CollectedSubstring, R> {
+    interface _NumericLiteralFactory<in P : Pos, in CS : CollectedSubstring, out R> : BuilderState<P, CS, R> {
         /**
          * Initiates building of numeric literal that started with digit separators
          * (it is an error, separators must be only between digits) and then non-zero decimal digit.
@@ -106,7 +107,7 @@ object NumericLiteralBuilders {
      * @param CS Type of [collected substring][CollectedSubstring] implementation expected by this builder.
      * @param R State that will be returned after finishing parsing numeric literal.
      */
-    interface LeadingZero<P : Pos, CS : CollectedSubstring, R> {
+    interface LeadingZero<in P : Pos, in CS : CollectedSubstring, out R> : BuilderState<P, CS, R> {
         /**
          * There is zero and ***known*** radix, but nothing related to numeric literal after them.
          *
@@ -300,7 +301,7 @@ object NumericLiteralBuilders {
      * @param CS Type of [collected substring][CollectedSubstring] implementation expected by this builder.
      * @param R State that will be returned after finishing parsing numeric literal.
      */
-    interface NonDecimalIntegerValue<P : Pos, CS : CollectedSubstring, R> {
+    interface NonDecimalIntegerValue<in P : Pos, in CS : CollectedSubstring, out R> : BuilderState<P, CS, R> {
         /**
          * Last chunk of digits. There are no digits or separators after chunk.
          * If chunk followed by separators, [lastNonDecimalIntegerValue_trailingDigitSeparators][NumericLiteralBuilders.NonDecimalIntegerValue.lastNonDecimalIntegerValue_trailingDigitSeparators]
@@ -338,7 +339,7 @@ object NumericLiteralBuilders {
      * @param CS Type of [collected substring][CollectedSubstring] implementation expected by this builder.
      * @param R State that will be returned after finishing parsing numeric literal.
      */
-    interface DecimalIntegerPartValue<P : Pos, CS : CollectedSubstring, R> {
+    interface DecimalIntegerPartValue<in P : Pos, in CS : CollectedSubstring, out R> : BuilderState<P, CS, R> {
         @Finalizer
         fun lastIntegerPartValue(value: CS): DecimalFractionalPartDot<P, CS, R>
 
@@ -369,7 +370,7 @@ object NumericLiteralBuilders {
      * @param CS Type of [collected substring][CollectedSubstring] implementation expected by this builder.
      * @param R State that will be returned after finishing parsing numeric literal.
      */
-    interface DecimalFractionalPartDot<P : Pos, CS : CollectedSubstring, R> {
+    interface DecimalFractionalPartDot<in P : Pos, in CS : CollectedSubstring, out R> : BuilderState<P, CS, R> {
         @Finalizer
         fun noFractionalPart(): Exponent<P, CS, R>
 
@@ -405,7 +406,7 @@ object NumericLiteralBuilders {
      * @param CS Type of [collected substring][CollectedSubstring] implementation expected by this builder.
      * @param R State that will be returned after finishing parsing numeric literal.
      */
-    interface DecimalFractionalPartValue<P : Pos, CS : CollectedSubstring, R> {
+    interface DecimalFractionalPartValue<in P : Pos, in CS : CollectedSubstring, out R> : BuilderState<P, CS, R> {
         @Finalizer
         fun lastFractionalPartValue(value: CS): Exponent<P, CS, R>
 
@@ -450,7 +451,7 @@ object NumericLiteralBuilders {
      * @param CS Type of [collected substring][CollectedSubstring] implementation expected by this builder.
      * @param R State that will be returned after finishing parsing numeric literal.
      */
-    interface Exponent<P : Pos, CS : CollectedSubstring, R> {
+    interface Exponent<in P : Pos, in CS : CollectedSubstring, out R> : BuilderState<P, CS, R> {
         @Finalizer
         fun noExponent(): GarbageAfterNumericLiteral<P, CS, R>
 
@@ -532,7 +533,7 @@ object NumericLiteralBuilders {
         ): GarbageAfterNumericLiteral<P, CS, R>
     }
 
-    interface GarbageAfterNumericLiteral<P : Pos, CS : CollectedSubstring, R> {
+    interface GarbageAfterNumericLiteral<in P : Pos, in CS : CollectedSubstring, out R> : BuilderState<P, CS, R> {
         @Finalizer
         fun noGarbage(): R
 

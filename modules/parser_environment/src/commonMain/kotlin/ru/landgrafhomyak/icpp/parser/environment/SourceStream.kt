@@ -1,7 +1,7 @@
 package ru.landgrafhomyak.icpp.parser.environment
 
 
-interface SourceStream<P : Pos, CS : CollectedSubstring> {
+interface SourceStream<out P : Pos, out CS : CollectedSubstring> {
     suspend fun collect(predicate: Predicate): CS
 
     suspend fun skip(predicate: Predicate) {
