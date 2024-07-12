@@ -5,18 +5,19 @@ rootDir.resolve("./kotlin-version.txt")
             throw IllegalArgumentException("Bad kotlin-version.txt")
     }
 
-fun includeBuildModule(name: String) {
-    includeBuild("./modules/$name") {
+fun includeBuildModule(location:String, name: String, ) {
+    includeBuild("$location$name/") {
         this@includeBuild.name = name
 
-        dependencySubstitution {
-            substitute(module("ru.landgrafhomyak.icpp.compiler-lib:$name"))
-                .using(project(":"))
-        }
+//        dependencySubstitution {
+//            substitute(module("ru.landgrafhomyak.icpp.compiler-lib:$name"))
+//                .using(project(":"))
+//        }
     }
 }
 
-includeBuildModule("_build_utilities")
-includeBuildModule("parser_environment")
-includeBuildModule("ast_builders_abstract")
-includeBuildModule("parser")
+includeBuildModule("./modules/", "_build_utilities")
+includeBuildModule("./modules/", "parser_environment")
+includeBuildModule("./modules/", "ast_builders_abstract")
+includeBuildModule("./modules/", "parser_tester")
+includeBuildModule("./modules/", "parser")
