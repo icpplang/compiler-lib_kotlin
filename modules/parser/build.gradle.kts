@@ -1,6 +1,6 @@
 import ru.landgrafhomyak.icpp.compiler_lib._build_utilities.InitBuild
 import ru.landgrafhomyak.icpp.compiler_lib._build_utilities.Modules
-import ru.landgrafhomyak.icpp.compiler_lib._build_utilities.kotlin
+import ru.landgrafhomyak.icpp.compiler_lib._build_utilities.kotlinMpp
 
 
 buildscript {
@@ -8,7 +8,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath("ru.landgrafhomyak.icpp.compiler-lib:_build_utilities")
+        classpath("ru.landgrafhomyak.icpp.compiler-lib:_build_utilities_mpp")
     }
 }
 
@@ -18,7 +18,7 @@ repositories {
 
 apply<InitBuild>()
 
-kotlin {
+kotlinMpp {
     jvm {}
 
     sourceSets {

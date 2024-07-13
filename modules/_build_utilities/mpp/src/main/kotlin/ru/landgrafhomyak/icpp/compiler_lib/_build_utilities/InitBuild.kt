@@ -12,10 +12,5 @@ class InitBuild : Plugin<Project> {
     override fun apply(project: Project) {
         project.group = Modules.GROUP_NAME
         project.plugins.apply(KotlinMultiplatformPluginWrapper::class.java)
-//        project.kotlin {  configKotlin() }
-    }
-
-    private fun KotlinMultiplatformExtension.configKotlin() {
-        jvm {}
     }
 }

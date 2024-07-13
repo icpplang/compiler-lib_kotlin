@@ -4,6 +4,6 @@ import org.gradle.api.Project
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.dsl.kotlinExtension
 
-fun Project.kotlin(action: KotlinMultiplatformExtension.() -> Unit) {
+fun Project.kotlinMpp(action: KotlinMultiplatformExtension.() -> Unit) {
     action(project.kotlinExtension as KotlinMultiplatformExtension)
 }
