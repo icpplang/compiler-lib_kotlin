@@ -7,8 +7,6 @@ repositories {
     mavenCentral()
 }
 
-group = "ru.landgrafhomyak.icpp.compiler-lib"
-
 kotlin {
     sourceSets {
         val main by getting {

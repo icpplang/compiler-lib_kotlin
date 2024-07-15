@@ -9,7 +9,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath("ru.landgrafhomyak.icpp.compiler-lib:_build_utilities")
+        classpath("ru.landgrafhomyak.icpp.compiler-lib:-build-utilities")
     }
 }
 
@@ -23,7 +23,7 @@ kotlin {
             dependencies {
                 compileOnly("dev.gradleplugins:gradle-api:${gradle.gradleVersion}")
                 implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:${rootDir.resolve("./../../../kotlin-version.txt").readText()}")
-                implementation(Modules.named("_build_utilities"))
+                implementation(Modules.named("-build-utilities"))
             }
         }
     }

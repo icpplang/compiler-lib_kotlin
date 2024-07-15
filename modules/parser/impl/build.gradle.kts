@@ -8,7 +8,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath("ru.landgrafhomyak.icpp.compiler-lib:_build_utilities/mpp")
+        classpath("ru.landgrafhomyak.icpp.compiler-lib:-build-utilities/mpp")
     }
 }
 
@@ -25,7 +25,7 @@ kotlinMpp {
         val commonMain by getting {
             dependencies {
                 compileOnly(Modules.named("parser/environment"))
-                compileOnly(Modules.named("parser/ast_builders"))
+                compileOnly(Modules.named("parser/ast-builders"))
             }
         }
 

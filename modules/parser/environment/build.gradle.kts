@@ -6,7 +6,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath("ru.landgrafhomyak.icpp.compiler-lib:_build_utilities/mpp")
+        classpath("ru.landgrafhomyak.icpp.compiler-lib:-build-utilities/mpp")
     }
 }
 

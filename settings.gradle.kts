@@ -16,11 +16,11 @@ fun includeBuildModule(location:String, name: String, ) {
     }
 }
 
-includeBuildModule("./modules/_build_utilities/shared/", "_build_utilities")
-includeBuildModule("./modules/_build_utilities/mpp/", "_build_utilities/mpp")
-includeBuildModule("./modules/_build_utilities/grdl/", "_build_utilities/gradle")
+includeBuildModule("./modules/-build-utilities/shared/", "-build-utilities")
+includeBuildModule("./modules/-build-utilities/mpp/", "-build-utilities/mpp")
+includeBuildModule("./modules/-build-utilities/grdl/", "-build-utilities/gradle")
 includeBuildModule("./modules/parser/environment/", "parser/environment")
-includeBuildModule("./modules/parser/ast_builders/", "parser/ast_builders")
+includeBuildModule("./modules/parser/ast-builders/", "parser/ast-builders")
 //includeBuildModule("./modules/parser_tester/api/", "parser_tester_api")
 //includeBuildModule("./modules/parser_tester/gradle_plugin/", "parser_tester_gradle_plugin")
 includeBuildModule("./modules/parser/impl/", "parser")
