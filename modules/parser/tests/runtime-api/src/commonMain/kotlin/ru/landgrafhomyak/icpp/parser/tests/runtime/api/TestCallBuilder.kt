@@ -1,4 +1,4 @@
-package ru.landgrafhomyak.icpp.parser_tester.api
+package ru.landgrafhomyak.icpp.parser.tests.runtime.api
 
 interface TestCallBuilder {
     fun sourceText(s: String)

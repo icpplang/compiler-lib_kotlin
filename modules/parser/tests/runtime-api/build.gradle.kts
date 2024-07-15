@@ -7,7 +7,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath("ru.landgrafhomyak.icpp.compiler-lib:_build_utilities_mpp")
+        classpath("ru.landgrafhomyak.icpp.compiler-lib:-build-utilities/mpp")
     }
 }
 
@@ -24,7 +24,7 @@ kotlinMpp {
         val commonMain by getting {
             dependencies {
                 compileOnly(kotlin("reflect"))
-                compileOnly(Modules.named("parser_environment"))
+                compileOnly(Modules.named("parser/environment"))
             }
         }
     }

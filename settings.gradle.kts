@@ -5,7 +5,7 @@ rootDir.resolve("./kotlin-version.txt")
             throw IllegalArgumentException("Bad kotlin-version.txt")
     }
 
-fun includeBuildModule(location:String, name: String, ) {
+fun includeBuildModule(location: String, name: String, config: ConfigurableIncludedBuild.() -> Unit = {}) {
     includeBuild(location) {
         this@includeBuild.name = name
 
@@ -13,14 +13,21 @@ fun includeBuildModule(location:String, name: String, ) {
             substitute(module("ru.landgrafhomyak.icpp.compiler-lib:$name"))
                 .using(project(":"))
         }
+
+        this.config()
     }
 }
 
 includeBuildModule("./modules/-build-utilities/shared/", "-build-utilities")
 includeBuildModule("./modules/-build-utilities/mpp/", "-build-utilities/mpp")
 includeBuildModule("./modules/-build-utilities/grdl/", "-build-utilities/gradle")
+
 includeBuildModule("./modules/parser/environment/", "parser/environment")
 includeBuildModule("./modules/parser/ast-builders/", "parser/ast-builders")
-//includeBuildModule("./modules/parser_tester/api/", "parser_tester_api")
-//includeBuildModule("./modules/parser_tester/gradle_plugin/", "parser_tester_gradle_plugin")
 includeBuildModule("./modules/parser/impl/", "parser")
+
+includeBuildModule("./modules/parser/tests/runtime-api/", "parser/tests/runtime-api")
+includeBuildModule("./modules/parser/tests/runtime-impl/", "parser/tests/runtime")
+includeBuildModule("./modules/parser/tests/testers/", "parser/tests/testers")
+includeBuildModule("./modules/parser/tests/impl", "parser/tests")
+includeBuildModule("./modules/parser/tests/run/", "parser/tests/-run")
