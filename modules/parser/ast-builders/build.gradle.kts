@@ -21,7 +21,7 @@ repositories {
 apply<InitBuild>()
 apply<EnableKsp_CommonOnly>()
 
-addKspProcessor_commonOnly(project(":generator"))
+addKspProcessor_commonOnly(project(":mocks-collector"))
 
 kotlinMpp {
     sourceSets {

@@ -12,7 +12,7 @@ class EnableKsp_CommonOnly : Plugin<Project> {
 
         project.kotlinMpp {
             sourceSets.commonMain {
-                kotlin.srcDir(project.buildDir.resolve("./generated/ksp/metadata/commonMain/kotlin/"))
+                // kotlin.srcDir(project.buildDir.resolve("./generated/ksp/metadata/commonMain/kotlin/"))
 
                 // magic from https://github.com/google/ksp/issues/963#issuecomment-1894144639
                 project.tasks.withType(KspTaskMetadata::class.java) { t ->

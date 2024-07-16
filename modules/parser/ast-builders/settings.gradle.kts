@@ -1,2 +1,2 @@
 include(":mock-annotation")
-include(":generator")
+include(":mocks-collector")
