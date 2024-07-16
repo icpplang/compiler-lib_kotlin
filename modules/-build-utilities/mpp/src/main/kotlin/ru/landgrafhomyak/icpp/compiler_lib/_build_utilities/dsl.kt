@@ -7,3 +7,8 @@ import org.jetbrains.kotlin.gradle.dsl.kotlinExtension
 fun Project.kotlinMpp(action: KotlinMultiplatformExtension.() -> Unit) {
     action(project.kotlinExtension as KotlinMultiplatformExtension)
 }
+
+@Suppress("FunctionName")
+fun Project.addKspProcessor_commonOnly(dependency: Any) {
+    project.dependencies.add("kspCommonMainMetadata", dependency)
+}
