@@ -23,7 +23,7 @@ kotlinMpp {
     }
 
     sourceSets {
-        val commonMain by getting {
+        val jvmMain by getting {
             dependencies {
                 implementation(Modules.named("parser/environment"))
                 implementation(project(":mock-annotation"))

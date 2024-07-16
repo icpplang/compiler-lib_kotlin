@@ -2,11 +2,11 @@ package ru.landgrafhomyak.icpp.compiler_lib._build_utilities
 
 object Versions {
     @JvmStatic
-    val kotlinVersion = "1.7.10"
+    val KOTLIN = "2.0.0"
 
     @JvmStatic
-    val KSP = "1.7.22-1.0.8"
+    val KSP = "2.0.0-1.0.23"
 
     @JvmStatic
-    val KOTLIN_POET = "1.12.0" // because depends on kotlin 1.7.0, while 1.13.0 depends on kotlin 1.8.0
+    val KOTLIN_POET = "1.18.1"
 }

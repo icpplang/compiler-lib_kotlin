@@ -1,10 +1,3 @@
-rootDir.resolve("./kotlin-version.txt")
-    .readText()
-    .also { s ->
-        if (Regex("^[^\\s:]+$").matchEntire(s) == null)
-            throw IllegalArgumentException("Bad kotlin-version.txt")
-    }
-
 fun includeBuildModule(location: String, name: String, config: ConfigurableIncludedBuild.() -> Unit = {}) {
     includeBuild(location) {
         this@includeBuild.name = name

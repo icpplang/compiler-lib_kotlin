@@ -2,15 +2,33 @@ package ru.landgrafhomyak.icpp.compiler_lib._build_utilities
 
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.api.plugins.ExtensionAware
-import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
-import org.jetbrains.kotlin.gradle.dsl.kotlinExtension
-import org.jetbrains.kotlin.gradle.plugin.KotlinMultiplatformPluginWrapper
-import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinMultiplatformPlugin
 
 class InitBuild : Plugin<Project> {
     override fun apply(project: Project) {
         project.group = Modules.GROUP_NAME
-        project.plugins.apply(KotlinMultiplatformPluginWrapper::class.java)
+        project.plugins.apply("org.jetbrains.kotlin.multiplatform")
+        project.kotlinMpp {
+            jvm()
+//            js(IR) { // errors with composite build
+////                nodejs()
+//                browser()
+//            }
+            androidNativeArm32()
+             androidNativeArm64()
+            androidNativeX86()
+            androidNativeX64()
+            iosArm64()
+            iosSimulatorArm64()
+            watchosArm32()
+            watchosArm64()
+            watchosX64()
+            iosX64()
+            watchosSimulatorArm64()
+            mingwX64()
+            macosX64()
+            macosArm64()
+            linuxX64()
+            linuxArm64()
+        }
     }
 }

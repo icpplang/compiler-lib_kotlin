@@ -80,7 +80,7 @@ class AutoMockableStatesCollector(
         val obj = PropertySpec
             .builder("_AutoMockableStatesList_data", Collection::class.asClassName().parameterizedBy(elemType))
             .addModifiers(KModifier.INTERNAL)
-            .addAnnotation(AnnotationSpec.builder(Suppress::class).addMember("\"PropertyName\"").build())
+            .addAnnotation(AnnotationSpec.builder(Suppress::class).addMember("\"ObjectPropertyName\"").addMember("\"UNCHECKED_CAST\"").build())
             .initializer(initializer)
             .build()
 

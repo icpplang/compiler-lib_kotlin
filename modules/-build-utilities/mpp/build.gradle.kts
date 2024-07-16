@@ -24,7 +24,7 @@ kotlin {
             dependencies {
                 implementation(Modules.named("-build-utilities"))
                 compileOnly("dev.gradleplugins:gradle-api:${gradle.gradleVersion}")
-                implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:${rootDir.resolve("./../../../kotlin-version.txt").readText()}")
+                implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:${Versions.KOTLIN}")
                 implementation("com.google.devtools.ksp:symbol-processing-gradle-plugin:${Versions.KSP}")
             }
         }

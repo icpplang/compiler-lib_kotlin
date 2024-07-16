@@ -1,4 +1,5 @@
 import com.google.devtools.ksp.gradle.KspGradleSubplugin
+import com.google.devtools.ksp.gradle.KspTaskMetadata
 import ru.landgrafhomyak.icpp.compiler_lib._build_utilities.InitBuild
 import ru.landgrafhomyak.icpp.compiler_lib._build_utilities.Modules
 import ru.landgrafhomyak.icpp.compiler_lib._build_utilities.kotlinMpp
@@ -35,14 +36,23 @@ kotlinMpp {
                 compileOnly(Modules.named("parser/environment"))
                 api(project(":mock-annotation"))
             }
+            kotlin.srcDir(buildDir.resolve("./generated/ksp/metadata/commonMain/kotlin/"))
+            tasks.withType<KspTaskMetadata> { kotlin.srcDir(destinationDirectory) }
         }
     }
+//    tasks["compileKotlinAndroidNativeArm32"].dependsOn(tasks["kspCommonMainKotlinMetadata"])
+
 }
 
 dependencies {
-    configurations.forEach { c ->
-        if (!c.name.startsWith("ksp") || c.name == "ksp")
-            return@forEach
-        add(c.name, project(":generator"))
-    }
+
+//    println(configurations.joinToString {it.name})
+//    configurations.forEach { c ->
+//        if (!c.name.startsWith("ksp") || c.name == "ksp")
+//            return@forEach
+////        println(c.name)
+//        add(c.name, project(":generator"))
+//    }
+
+    add("kspCommonMainMetadata", project(":generator"))
 }
