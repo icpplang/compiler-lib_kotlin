@@ -107,6 +107,7 @@ sealed interface NumericLiteralBuilders {
      * @param CS Type of [collected substring][CollectedSubstring] implementation expected by this builder.
      * @param R State that will be returned after finishing parsing numeric literal.
      */
+    @_IcppParserState_AutoGenerateMock
     interface LeadingZero<in P : Pos, in CS : CollectedSubstring, out R> : BuilderState<P, CS, R> {
         /**
          * There is zero and ***known*** radix, but nothing related to numeric literal after them.
@@ -301,6 +302,7 @@ sealed interface NumericLiteralBuilders {
      * @param CS Type of [collected substring][CollectedSubstring] implementation expected by this builder.
      * @param R State that will be returned after finishing parsing numeric literal.
      */
+    @_IcppParserState_AutoGenerateMock
     interface NonDecimalIntegerValue<in P : Pos, in CS : CollectedSubstring, out R> : BuilderState<P, CS, R> {
         /**
          * Last chunk of digits. There are no digits or separators after chunk.
@@ -339,6 +341,7 @@ sealed interface NumericLiteralBuilders {
      * @param CS Type of [collected substring][CollectedSubstring] implementation expected by this builder.
      * @param R State that will be returned after finishing parsing numeric literal.
      */
+    @_IcppParserState_AutoGenerateMock
     interface DecimalIntegerPartValue<in P : Pos, in CS : CollectedSubstring, out R> : BuilderState<P, CS, R> {
         @Finalizer
         fun lastIntegerPartValue(value: CS): DecimalFractionalPartDot<P, CS, R>
@@ -370,6 +373,7 @@ sealed interface NumericLiteralBuilders {
      * @param CS Type of [collected substring][CollectedSubstring] implementation expected by this builder.
      * @param R State that will be returned after finishing parsing numeric literal.
      */
+    @_IcppParserState_AutoGenerateMock
     interface DecimalFractionalPartDot<in P : Pos, in CS : CollectedSubstring, out R> : BuilderState<P, CS, R> {
         @Finalizer
         fun noFractionalPart(): Exponent<P, CS, R>
@@ -406,6 +410,7 @@ sealed interface NumericLiteralBuilders {
      * @param CS Type of [collected substring][CollectedSubstring] implementation expected by this builder.
      * @param R State that will be returned after finishing parsing numeric literal.
      */
+    @_IcppParserState_AutoGenerateMock
     interface DecimalFractionalPartValue<in P : Pos, in CS : CollectedSubstring, out R> : BuilderState<P, CS, R> {
         @Finalizer
         fun lastFractionalPartValue(value: CS): Exponent<P, CS, R>
@@ -451,6 +456,7 @@ sealed interface NumericLiteralBuilders {
      * @param CS Type of [collected substring][CollectedSubstring] implementation expected by this builder.
      * @param R State that will be returned after finishing parsing numeric literal.
      */
+    @_IcppParserState_AutoGenerateMock
     interface Exponent<in P : Pos, in CS : CollectedSubstring, out R> : BuilderState<P, CS, R> {
         @Finalizer
         fun noExponent(): GarbageAfterNumericLiteral<P, CS, R>
@@ -533,6 +539,7 @@ sealed interface NumericLiteralBuilders {
         ): GarbageAfterNumericLiteral<P, CS, R>
     }
 
+    @_IcppParserState_AutoGenerateMock
     interface GarbageAfterNumericLiteral<in P : Pos, in CS : CollectedSubstring, out R> : BuilderState<P, CS, R> {
         @Finalizer
         fun noGarbage(): R

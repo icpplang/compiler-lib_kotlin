@@ -1,8 +1,7 @@
-import com.google.devtools.ksp.gradle.KspGradleSubplugin
 import ru.landgrafhomyak.icpp.compiler_lib._build_utilities.InitBuild
+import ru.landgrafhomyak.icpp.compiler_lib._build_utilities.Libs
 import ru.landgrafhomyak.icpp.compiler_lib._build_utilities.Modules
 import ru.landgrafhomyak.icpp.compiler_lib._build_utilities.kotlinMpp
-
 
 buildscript {
     repositories {
@@ -13,17 +12,11 @@ buildscript {
     }
 }
 
-plugins {
-//    id("com.google.devtools.ksp")
-    idea
-}
-
 repositories {
     mavenCentral()
 }
 
 apply<InitBuild>()
-apply<KspGradleSubplugin>()
 
 kotlinMpp {
     jvm {
@@ -32,17 +25,12 @@ kotlinMpp {
     sourceSets {
         val commonMain by getting {
             dependencies {
-                compileOnly(Modules.named("parser/environment"))
-                api(project(":mock-annotation"))
+                implementation(Modules.named("parser/environment"))
+                implementation(project(":mock-annotation"))
+                implementation(Libs.KSP_API)
+                implementation(Libs.KOTLIN_POET)
+                implementation(Libs.KOTLIN_POET_KSP_INTEROP)
             }
         }
-    }
-}
-
-dependencies {
-    configurations.forEach { c ->
-        if (!c.name.startsWith("ksp") || c.name == "ksp")
-            return@forEach
-        add(c.name, project(":generator"))
     }
 }
